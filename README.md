@@ -1,2 +1,2 @@
 # ISLR_ex
-Practise ISLR book 
+Practise with the ISLR book 
