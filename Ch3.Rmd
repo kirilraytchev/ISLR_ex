@@ -1,0 +1,1329 @@
+---
+title: "Ch3"
+author: "Kiril Raytchev"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR)
+library(MASS)
+library(tidymodels)
+library(recipes)
+library(tidyverse)
+library(GGally)
+library(gridExtra)
+library(grid)
+```
+
+## Conceptual
+
+*Ex.1* Describe the null hypotheses to which the p-values given in Table 3.4
+correspond. Explain what conclusions you can draw based on these
+p-values. Your explanation should be phrased in terms of sales, TV,
+radio, and newspaper, rather than in terms of the coefficients of the
+linear model.
+
+>**Answer:** We observe small p-values < 0.05 for `TV` and `radio`, which means that we reject the null hypoteses, stating that there is no association with sales:   
+$H_0 : \beta_1 = 0$  
+$H_0 : \beta_2 = 0$  
+The null hypoteses can not be rejected for the `newspaper`   
+
+*Ex.2* Carefully explain the differences between the KNN classifier and KNN
+regression methods.
+
+>**Answer:** KNN classifier clissifies an output to one group or another, where the KNN regression predicts an ouput value based on input. Both methods are "trained" on distances to nearest observations.
+
+*Ex.3* Suppose we have a data set with five predictors, X1 =GPA, X2 = IQ,
+X3 = Gender (1 for Female and 0 for Male), X4 = Interaction between
+GPA and IQ, and X5 = Interaction between GPA and Gender. The
+response is starting salary after graduation (in thousands of dollars).
+Suppose we use least squares to fit the model, and get $\hat\beta$ 0 = 50, $\hat\beta$ 1 =
+20, $\hat\beta$ 2 = 0.07, $\hat\beta$ 3 = 35, $\hat\beta$ 4 = 0.01, $\hat\beta$ 5 = −10.
+
+*(a)* Which answer is correct, and why?
+
+i. For a fixed value of IQ and GPA, males earn more on average
+than females.
+ii. For a fixed value of IQ and GPA, females earn more on
+average than males.
+iii. For a fixed value of IQ and GPA, males earn more on average
+than females provided that the GPA is high enough.
+iv. For a fixed value of IQ and GPA, females earn more on
+average than males provided that the GPA is high enough.
+
+>**Answer:** point(iii.), provided that GPA is greater than 3.5
+
+```{r}
+# Male > Female when
+# 50 + 20*GPA > 85 + 10*GPA
+```
+
+*(b)* Predict the salary of a female with IQ of 110 and a GPA of 4.0.
+
+>**Answer:** 137.1
+
+```{r}
+IQ <- 110
+GPA <- 4.0
+50 + 20*GPA + 0.07*IQ + 35 + 0.01*GPA*IQ - 10*GPA 
+```
+
+*(c)* True or false: Since the coefficient for the GPA/IQ interaction
+term is very small, there is very little evidence of an interaction
+effect. Justify your answer.
+
+>**Answer:** False. p-value should be examined for statistical significance of the effect.
+
+*Ex.4* I collect a set of data (n = 100 observations) containing a single
+predictor and a quantitative response. I then fit a linear regression
+model to the data, as well as a separate cubic regression, i.e. Y =
+$\beta_0$ + $\beta_1X$ + $\beta_2X^2$ + $\beta_3X^3$ + $\epsilon$.
+
+*(a)* Suppose that the true relationship between X and Y is linear,
+i.e. $Y = \beta_0 + \beta_1X + \epsilon$. Consider the training residual sum of
+squares (RSS) for the linear regression, and also the training
+RSS for the cubic regression. Would we expect one to be lower
+than the other, would we expect them to be the same, or is there
+not enough information to tell? Justify your answer.
+
+>**Answer:** Higher polynomial degree results in lower residual values for the case of training data set. Cubic regression fit will be closer to the data.
+
+*(b)* Answer (a) using test rather than training RSS.
+
+>**Answer:** If 1st degree polynomial is the true relationship then testing RSS will be higher for the cubic model due to overfitting with the traing data.
+
+*(c)* Suppose that the true relationship between X and Y is not linear,
+but we don’t know how far it is from linear. Consider the training
+RSS for the linear regression, and also the training RSS for the
+cubic regression. Would we expect one to be lower than the
+other, would we expect them to be the same, or is there not
+enough information to tell? Justify your answer.
+
+>**Answer:** The higher the polynomial degree the closer it is the model to the training data.
+
+*(d)* Answer (c) using test rather than training RSS.
+
+>**Answer:** Impossible to tell. Higher degree model could have higher test RSS due to overfitting with the train RSS or it could have lower test RSS if the true relationship deviates from linear to an "acceptable" degree.
+
+*Ex.5* Consider the fitted values that result from performing linear regression
+without an intercept. In this setting, the ith fitted value takes
+the form
+
+$\hat{y_i} = x_i\hat{\beta_i}$
+
+where
+
+`r knitr::include_graphics("Ch3Ex5_1.jpg")`
+
+Show that we can write
+
+`r knitr::include_graphics("Ch3Ex5_2.jpg")`
+
+What is $a_i\prime$
+
+>**Answer:** `r knitr::include_graphics("Ch3Ex5_3.jpg")`
+
+*Ex.6* Using (3.4), argue that in the case of simple linear regression, the
+least squares line always passes through the point $(\bar{x}, \bar{y})$.
+
+>**Answer** By definition, from (3.4), we have: $\bar{y} = \hat{\beta}_0 + \hat{\beta}_1\bar{x}$ and considering that the coef. for least squares line are exactly $\hat{\beta}_0$ and $\hat{\beta}_1$ than for each $y_i$ and $x_i$ we have in fact $\bar{y}$ and $\bar{x}$
+
+*Ex.7* It is claimed in the text that in the case of simple linear regression
+of Y onto X, the $R^2$ statistic (3.17) is equal to the square of the
+correlation between X and Y (3.18). Prove that this is the case. For
+simplicity, you may assume that $\overline{x} = \overline{y} = 0$.
+
+>**Answer:** `r knitr::include_graphics("Ch3Ex7.jpg")`
+
+## Applied
+
+*Ex.8* This question involves the use of simple linear regression on the Auto
+data set.
+
+*(a)* Use the lm() function to perform a simple linear regression with
+mpg as the response and horsepower as the predictor. Use the
+summary() function to print the results. 
+
+```{r}
+fit_8a <- lm(mpg ~ horsepower, data = Auto) %>% glance()
+fit_8a
+```
+
+```{r}
+fit_8a_t <- lm(mpg ~ horsepower, data = Auto)
+fit_8a_t <- broom::tidy(fit_8a_t)
+fit_8a_t
+```
+
+
+Comment on the output.
+For example:
+
+*(i)* Is there a relationship between the predictor and the response?
+
+>**Answer:** We reject the $H_0$ for $\beta$ as the F-statistic `r fit_8a$statistic`, considering p-value `r fit_8a$p.value`, is much more than 1.
+
+*(ii)* How strong is the relationship between the predictor and
+the response?
+
+>**Answer:** Considering that RSE is `r fit_8a$sigma` and mean value for mapg is `r mean(Auto$mpg)` , we can say that `r (fit_8a$sigma/mean(Auto$mpg))*100` % is the percentage error.
+Furthermore, $R^2$ is `r fit_8a$r.squared`, which means that `horsepower` explains `r fit_8a$r.squared*100` % of the variance of `mpg`
+
+*(iii)* Is the relationship between the predictor and the response
+positive or negative?
+
+>**Answer:** Given that the sign of coef. `r fit_8a_t$term[2]` is negative as in `r fit_8a_t$estimate[2]`, so is the realtionship.
+
+*(iv)* What is the predicted mpg associated with a horsepower of
+98? What are the associated 95% confidence and prediction
+intervals?
+
+>**Answer:** 
+
+Prediction interval:
+
+```{r}
+tbl <- tibble(
+        horsepower = c(98)
+)
+
+predict(lm(mpg ~ horsepower, data = Auto), newdata = tbl, interval = "prediction")
+```
+
+Confidence interval:
+
+```{r}
+predict(lm(mpg ~ horsepower, data = Auto), newdata = tbl, interval = "confidence")
+```
+
+*(b)* Plot the response and the predictor. Use the abline() function
+to display the least squares regression line.
+
+>**Answer**
+
+```{r}
+ggplot(data = Auto) + 
+        geom_point(mapping = aes(x = horsepower, y = mpg)) + 
+        geom_abline(mapping = aes(intercept = fit_8a_t$estimate[1], 
+                                  slope = fit_8a_t$estimate[2]),
+                    color = "red"
+                    )
+```
+
+*(c)* Use the plot() function to produce diagnostic plots of the least
+squares regression fit. Comment on any problems you see with
+the fit.
+
+>**Answer:** 
+
+```{r}
+par(mfrow=c(2,2))
+plot(lm(mpg ~ horsepower, data = Auto))
+```
+
+* Residuals vs Fitted exhibits an U-shape which is a sign of **non-linearity**
+
+* We observe outliers in 334, 323 and 330 (predicted $y$ is far from the observed) 
+
+* Residuals vs Leverage shows that observations 34 and 117 have a high leverage (we have unusual predictor $x$, given the response $y$ in the observations)
+
+*Ex.9* This question involves the use of multiple linear regression on the
+Auto data set.
+
+*(a)* Produce a scatterplot matrix which includes all of the variables
+in the data set.
+
+```{r message=FALSE, warning=FALSE}
+Auto %>%
+        dplyr::select(-name) %>%
+        ggpairs(Auto)
+```
+
+*(b)* Compute the matrix of correlations between the variables using
+the function cor(). You will need to exclude the name variable,
+cor() which is qualitative.
+
+```{r}
+Auto %>%
+        select(-name) %>%
+        cor
+```
+
+*(c)* Use the lm() function to perform a multiple linear regression
+with mpg as the response and all other variables except name as
+the predictors. Use the summary() function to print the results.
+
+```{r}
+auto2 <- Auto %>%
+        select(-name)
+
+fit9ai <- lm(mpg ~ ., auto2)
+fit9ai_b <- broom::tidy(fit9ai)
+fit9ai_g <- fit9ai %>% glance
+fit9ai %>% summary
+```
+
+Comment on the output. For instance:
+
+*(i)* Is there a relationship between the predictors and the response?
+
+>**Answer:** We reject the $H_0$ for $\beta$ as the F-statistic `r fit9ai_g$statistic`, considering p-value `r fit9ai_g$p.value`, is much more than 1.
+
+*(ii)* Which predictors appear to have a statistically significant
+relationship to the response?
+
+>**Answer:** Considering the p-value of the t-statistic of given coeff, we have significant relationship in `displacement`, `weight`, `year` and `origin` 
+
+*(iii)* What does the coefficient for the year variable suggest?
+
+>**Answer:** Each additional year increases mpg with 0.75, all other variables being fixed
+
+*(d)* Use the plot() function to produce diagnostic plots of the linear
+regression fit. 
+
+```{r}
+par(mfrow=c(2,2))
+plot(lm(mpg ~ ., auto2))
+```
+
+Comment on any problems you see with the fit.
+
+Do the residual plots suggest any unusually large outliers? 
+
+>**Answer:** Outlier is an observation that is far from the predicted value of the model. As shown in the graph, observations with studentized residuals outside -3 and 3 interval are candidates for outliers.
+
+```{r}
+
+tbl_model_fit9ai <- tibble(
+        Observation = 1:nrow(fit9ai$model),
+        Fitted = fit9ai$fitted.values,
+        Studentised.residuals = rstudent(fit9ai),
+        Leverage=hatvalues(fit9ai)
+)
+
+
+ggplot(tbl_model_fit9ai, aes(Fitted, Studentised.residuals), label = Observation) + 
+        geom_point() +
+        geom_text(aes(label=ifelse(Studentised.residuals>3,as.character(Observation),'')),hjust=0,vjust=0) +
+        geom_hline(yintercept=c(3,-3), linetype="dashed") +
+        geom_hline(yintercept=0, linetype="solid") +
+        ylab("Studentised residuals")
+```
+
+
+Does the leverage plot identify any observations with unusually high
+leverage?
+
+>**Answer:** High levarage observation is one with unusual $x_i$, given the others.
+
+```{r}
+ggplot(tbl_model_fit9ai, aes(Leverage, Studentised.residuals), label = Observation) + 
+        geom_point() +
+        geom_text(aes(label=ifelse(Studentised.residuals>3,as.character(Observation),'')),hjust=0,vjust=0) +
+        geom_text(aes(label=ifelse(Leverage == max(Leverage),as.character(Observation),'')),hjust=0,vjust=0, color = "red") +
+        geom_hline(yintercept=c(3,-3), linetype="dashed") +
+        geom_hline(yintercept=0, linetype="solid") +
+        ylab("Studentised residuals")
+```
+
+Marked with red is the observation with high leverage
+
+*(e)* Use the * and : symbols to fit linear regression models with
+interaction effects. Do any interactions appear to be statistically
+significant?
+
+>**Answer:** 
+
+Coef `cylinders * displacement` is significant with p-value `***`
+
+```{r}
+fit_9e_1 <- lm(mpg ~ cylinders + 
+                       displacement +
+                       horsepower + 
+                       weight + 
+                       acceleration + 
+                       year + 
+                       origin + 
+                       cylinders * displacement, auto2)
+
+
+fit_9e_1 %>% summary
+
+```
+
+Coef `horsepower * weight` is significant with p-value `***`
+
+```{r}
+fit_9e_2 <- lm(mpg ~ cylinders + 
+                       displacement +
+                       horsepower + 
+                       weight + 
+                       acceleration + 
+                       year + 
+                       origin + 
+                       horsepower * weight, auto2)
+
+
+fit_9e_2 %>% summary
+```
+
+*(f)*Try a few different transformations of the variables, such as log(X), √X, X2. 
+
+Comment on your findings.
+
+>**Answer:** We try transformations for the model `mpg ~ horsepower` as we see a pattern in residuals plot, indicating non-linear relationship
+
+```{r}
+
+plotDiag <- function (model, type){
+        
+        tbl <- tibble(
+                Observation = 1:nrow(model$model),
+                Fitted = model$fitted.values,
+                Studentised.residuals = rstudent(model),
+                Leverage=hatvalues(model)
+        )
+        
+        
+        if (type == "fitted"){
+                
+                ggplot(tbl, aes(Fitted, Studentised.residuals), label = Observation) + 
+                        geom_point() +
+                        geom_text(aes(label=ifelse(Studentised.residuals>3,as.character(Observation),'')),hjust=0,vjust=0) +
+                        geom_hline(yintercept=c(3,-3), linetype="dashed") +
+                        geom_hline(yintercept=0, linetype="solid") +
+                        geom_smooth(color = "red") + 
+                        ylab("Studentised residuals")
+                
+        } else if (type == "leverage"){
+                
+                ggplot(tbl, aes(Leverage, Studentised.residuals), label = Observation) + 
+                        geom_point() +
+                        geom_text(aes(label=ifelse(Studentised.residuals>3,as.character(Observation),'')),hjust=0,vjust=0) +
+                        geom_text(aes(label=ifelse(Leverage == max(Leverage),as.character(Observation),'')),hjust=0,vjust=0, color = "red") +
+                        geom_hline(yintercept=c(3,-3), linetype="dashed") +
+                        geom_hline(yintercept=0, linetype="solid") +
+                        ylab("Studentised residuals")
+        }
+        
+}
+
+```
+
+Without transform:
+
+```{r message=FALSE, warning=FALSE}
+plotDiag(lm(mpg ~ horsepower, data = auto2), "fitted")
+```
+
+log(X), √X, X2 transforms. log(x) and √X better "smoothen" the pattern seen without transform: 
+
+```{r message=FALSE, warning=FALSE}
+plotDiag(lm(mpg ~ log(horsepower), data = auto2), "fitted")
+plotDiag(lm(mpg ~ sqrt(horsepower), data = auto2), "fitted")
+plotDiag(lm(mpg ~ I(horsepower^2), data = auto2), "fitted")
+```
+
+Deciding on the models' fit we arrange on $R^2$ and $RSE$. We see that log(x) and √X exhibit better statistics than no transform model x.
+
+```{r}
+
+tbl_9_f <- lm(mpg ~ horsepower, data = auto2) %>%
+        glance %>%
+        select(r.squared, sigma) %>%
+        mutate(model = "mpg ~ horsepower") %>%
+        bind_rows(
+                lm(mpg ~ log(horsepower), data = auto2) %>%
+                        glance %>%
+                        select(r.squared, sigma) %>%
+                        mutate(model = "mpg ~ log(horsepower)")
+        ) %>%
+        bind_rows(
+                lm(mpg ~ sqrt(horsepower), data = auto2) %>%
+                        glance %>%
+                        select(r.squared, sigma) %>%
+                        mutate(model = "mpg ~ sqrt(horsepower)")
+        ) %>%
+        bind_rows(
+                lm(mpg ~ I(horsepower^2), data = auto2) %>%
+                        glance %>%
+                        select(r.squared, sigma) %>%
+                        mutate(model = "mpg ~ I(horsepower^2)")
+        ) %>%
+        arrange(sigma)
+
+tbl_9_f
+
+```
+
+*Ex.10* This question should be answered using the Carseats data set.
+
+```{r}
+as_tibble(Carseats)
+str(Carseats)
+```
+
+
+*(a)* Fit a multiple regression model to predict Sales using Price,
+Urban, and US.
+
+>**Answer:**
+
+```{r}
+fit_10a <- lm(Sales ~ Price + Urban + US, data = Carseats)
+coef_10a <- fit_10a %>% broom::tidy()
+coef_10a
+```
+
+*(b)* Provide an interpretation of each coefficient in the model. Be
+careful—some of the variables in the model are qualitative!
+
+>**Answer:**  
+
+* Increase of price with 1 unit, decreases sales with `r coef_10a$estimate[2]`, holding all the other predictors fixed
+
+* If Urban, sales decreases with `r coef_10a$estimate[3]`, holding all the other predictors fixed
+
+* If in US, sales increases with `r coef_10a$estimate[4]`, holding all the other predictors fixed
+
+*(c)* Write out the model in equation form, being careful to handle
+the qualitative variables properly.
+
+>**Answer:** 
+$Sales = 13.04 + (-0.05) \times Price + (-0.02) \times UrbanYes + 1.20 \times USYes$
+
+*(d)* For which of the predictors can you reject the null hypothesis
+H0 : $\beta$j = 0?
+
+>**Answer:** `Price` and `US`
+
+*(e)* On the basis of your response to the previous question, fit a
+smaller model that only uses the predictors for which there is
+evidence of association with the outcome.
+
+>**Answer:**
+
+```{r}
+fit_10e <- lm(Sales ~ Price + US, data = Carseats)
+coef_10e <- fit_10e %>% broom::tidy()
+coef_10e
+```
+
+*(f)* How well do the models in (a) and (e) fit the data?
+
+```{r}
+tbl_10_f <- fit_10a %>%
+        glance %>%
+        select(r.squared, sigma) %>%
+        mutate(model = "Sales ~ Price + Urban + US") %>%
+        bind_rows(
+                fit_10e %>%
+                        glance %>%
+                        select(r.squared, sigma) %>%
+                        mutate(model = "Sales ~ Price + US")
+        )
+tbl_10_f
+```
+
+Just a `r format(tbl_10_f$r.squared[1], digits = 2)` portion of the variability is explained by both models.
+
+*(g)* Using the model from (e), obtain 95% confidence intervals for
+the coefficient(s).
+
+>**Answer:**
+
+```{r}
+confint(fit_10e)
+```
+
+*(h)* Is there evidence of outliers or high leverage observations in the
+model from (e)?
+
+>**Answer:** 
+
+No studentized residual greater than 3 in absolute terms, hence no outlier;
+
+```{r message=FALSE, warning=FALSE}
+plotDiag(fit_10e,"fitted")
+```
+
+We observe points which leverage value greatly exceed $(p + 1) / n$: `r (nrow(coef_10e) - 1 + 1)/nrow(Carseats)`
+
+```{r message=FALSE, warning=FALSE}
+plotDiag(fit_10e,"leverage")
+```
+
+*Ex.11* In this problem we will investigate the t-statistic for the null hypothesis
+H0 : $\beta$ = 0 in simple linear regression without an intercept. To
+begin, we generate a predictor x and a response y as follows.
+
+```{r}
+set.seed (1)
+x=rnorm (100)
+y=2*x+rnorm (100)
+```
+
+*(a)* Perform a simple linear regression of y onto x, without an intercept.
+Report the coefficient estimate $\hat\beta$, the standard error of
+this coefficient estimate, and the t-statistic and p-value associated
+with the null hypothesis H0 : $\beta$ = 0. 
+
+(You can perform regression without an intercept using
+the command lm(y∼x+0).)
+
+```{r}
+tbl_11a <- tibble(
+        x = x,
+        y = y,
+        type = "y ~ x"
+)
+
+fit_11a <- lm(y ~ x + 0)
+tbl_11a_tidy <- fit_11a %>%
+        broom::tidy()
+
+slope_11a <- tbl_11a_tidy$estimate
+
+tbl_11a_tidy
+
+g_11a <- ggplot(tbl_11a) +
+        geom_abline(aes(intercept = 0, slope = slope_11a)) +
+        geom_point(aes(x = x, y = y))
+```
+
+
+Comment on these results: 
+
+>**Answer:** $H_0$ is rejected
+
+*(b)* Now perform a simple linear regression of x onto y without an
+intercept, and report the coefficient estimate, its standard error,
+and the corresponding t-statistic and p-values associated with
+the null hypothesis H0 : $\beta$ = 0. 
+
+```{r}
+tbl_11b <- tibble(
+        x = tbl_11a$y,
+        y = tbl_11a$x,
+        type = "x ~ y"
+)
+
+
+fit_11b <- lm(x ~ y + 0)
+tbl_11b_tidy <- fit_11b %>%
+        broom::tidy()
+
+slope_11b <- tbl_11b_tidy$estimate
+
+tbl_11b_tidy
+
+g_11b <- ggplot(tbl_11b) +
+        geom_abline(aes(intercept = 0, slope = slope_11b)) +
+        geom_point(aes(x = x, y = y))
+```
+
+
+Comment on these results:
+
+>**Answer:** $H_0$ is rejected
+
+*(c)* What is the relationship between the results obtained in (a) and
+(b)?
+
+```{r}
+grid.arrange(g_11a, g_11b, ncol=2)
+```
+
+```{r}
+tbl_11a %>%
+        bind_rows(tbl_11b) %>%
+        ggplot() +
+        geom_point(aes(x = x, y = y, color = type)) + 
+        geom_abline(aes(intercept = 0, slope = slope_11b)) + 
+        geom_abline(aes(intercept = 0, slope = slope_11a))
+        
+```
+
+
+>**Answer:** We observe same t-statistic and p-value
+
+*(d)* For the regression of Y onto X without an intercept, the tstatistic
+for H0 : $\beta$ = 0 takes the form $\hat\beta$ / SE($\hat\beta$), where $\hat\beta$ is
+given by (3.38), and where
+
+![](Ch3Ex11d.jpg)  
+
+(These formulas are slightly different from those given in Sections
+3.1.1 and 3.1.2, since here we are performing regression
+without an intercept.) Show algebraically, and confirm numerically
+in R, that the t-statistic can be written as
+
+![](Ch3Ex11d_1.jpg)
+
+>**Answer:** `r knitr::include_graphics("Ch3Ex11d_2.jpg")`
+
+and confirming in R:
+
+```{r}
+n_11d <- length(x)
+(sqrt(n_11d - 1) * sum(x*y)) / (sqrt(sum(x^2) * sum(y^2) - (sum(x * y)^2)))
+```
+
+*(e)* Using the results from (d), argue that the t-statistic for the regression
+of y onto x is the same as the t-statistic for the regression
+of x onto y.
+
+>**Answer:** Replacing $x$ and $y$ in formula won't change the result
+
+*(f)* In R, show that when regression is performed with an intercept,
+the t-statistic for H0 : $\beta1$ = 0 is the same for the regression of y
+onto x as it is for the regression of x onto y.
+
+>**Answer:** Same t-statistic is observed in both models
+
+```{r}
+lm(x ~ y) %>% broom::tidy()
+lm(y ~ x) %>% broom::tidy()
+```
+
+*Ex.12* This problem involves simple linear regression without an intercept.
+
+*(a)* Recall that the coefficient estimate $\hat\beta$ for the linear regression of
+Y onto X without an intercept is given by (3.38). Under what
+circumstance is the coefficient estimate for the regression of X
+onto Y the same as the coefficient estimate for the regression of
+Y onto X?
+
+>**Answer:** if $\sum{x_i^2} = \sum{y_i^2}$
+
+*(b)* Generate an example in R with n = 100 observations in which
+the coefficient estimate for the regression of X onto Y is different
+from the coefficient estimate for the regression of Y onto X.
+
+>**Answer:**
+
+```{r}
+set.seed(123)
+x_12b <- rnorm(n = 100)
+y_12b <- 3 * x_12b + rnorm(n = 100)
+
+lm(y_12b ~ x_12b) %>% broom::tidy()
+lm(x_12b ~ y_12b) %>% broom::tidy()
+
+```
+
+*(c)* Generate an example in R with n = 100 observations in which
+the coefficient estimate for the regression of X onto Y is the
+same as the coefficient estimate for the regression of Y onto X.
+
+>**Answer:**
+
+```{r}
+set.seed(321)
+x_12c <- rnorm(n = 100)
+sum_2_x_12c <- sum(x_12c^2)
+
+set.seed(123)
+y_12c <- rnorm(n = 100)
+
+# "equalizing" with the x squared summation with the last observation
+y_12c[100] <- sqrt(sum(x_12c^2) - sum(y_12c[1:99]^2))
+
+lm(y_12c ~ x_12c + 0) %>% broom::tidy()
+lm(x_12c ~ y_12c + 0) %>% broom::tidy()
+```
+
+*Ex.13* In this exercise you will create some simulated data and will fit simple
+linear regression models to it. Make sure to use set.seed(1) prior to
+starting part (a) to ensure consistent results.
+
+```{r}
+set.seed(1)
+```
+
+*(a)* Using the rnorm() function, create a vector, x, containing 100
+observations drawn from a N(0, 1) distribution. This represents
+a feature, X.
+
+>**Answer:** 
+
+```{r}
+x_13a <- rnorm(n = 100, mean = 0, sd = 1)
+```
+
+*(b)* Using the rnorm() function, create a vector, eps, containing 100
+observations drawn from a N(0, 0.25) distribution i.e. a normal
+distribution with mean zero and variance 0.25.
+
+```{r}
+eps_13b <- rnorm(n = 100, mean = 0, sd = sqrt(0.25))
+```
+
+*(c)* Using x and eps, generate a vector y according to the model
+
+$Y = -1 + 0.5X + \epsilon$
+
+```{r}
+y_13c <- -1 + 0.5*x_13a + eps_13b
+```
+
+What is the length of the vector y? What are the values of $\beta_0$
+and $\beta_1$ in this linear model?
+
+>**Answer:** $\beta_0 = -1; \beta_1 = 0.5$
+
+```{r}
+length(y_13c)
+beta0_13c <- -1
+beta1_13c <- 0.5
+```
+
+*(d)* Create a scatterplot displaying the relationship between x and
+y. 
+
+```{r}
+ggplot() +
+        geom_point(aes(x = x_13a, y = y_13c))
+
+```
+
+
+Comment on what you observe.
+
+>**Answer:** We observer linear relation with error term $\epsilon$
+
+*(e)* Fit a least squares linear model to predict y using x. 
+
+```{r}
+fit_13e <- lm(y_13c ~ x_13a)
+fit_13e %>% broom::tidy()
+
+beta0_hat_13e <- fit_13e %>% broom::tidy() %>% select(estimate) %>% filter(row_number() == 1) %>% unlist
+
+beta1_hat_13e <- fit_13e %>% broom::tidy() %>% select(estimate) %>% filter(row_number() == 2) %>% unlist
+```
+
+
+Comment on the model obtained. How do $\hat\beta_0$ and $\hat\beta_1$ compare to $\beta_0$ and $\beta_1$?
+
+>**Answer:** Estimated and true coef. are almost the same.
+
+*(f)* Display the least squares line on the scatterplot obtained in (d).
+Draw the population regression line on the plot, in a different
+color. Use the legend() command to create an appropriate legend.
+
+>**Answer:**
+
+```{r}
+ggplot() +
+        geom_point(aes(x = x_13a, y = y_13c)) +
+        geom_abline(aes(intercept = beta0_hat_13e, slope = beta1_hat_13e), color = "blue") +
+        geom_abline(aes(intercept = beta0_13c, slope = beta1_13c), color = "red") +
+        annotate(geom = "text", x = 2, y = -0.5, label = "Least squares", color = "blue") + 
+        annotate(geom = "text", x = 1, y = 0, label = "Population regression", color = "red")
+```
+
+*(g)* Now fit a polynomial regression model that predicts $y$ using $x$ and $x^2$. 
+
+```{r}
+fit_13g <- lm(y_13c ~ x_13a + I(x_13a^2))
+fit_13g %>% glance()
+fit_13g %>% broom::tidy()
+```
+
+```{r}
+fit_13e %>% glance()
+```
+
+
+Is there evidence that the quadratic term improves the model fit? Explain your answer.
+
+>**Answer:** Polynomial model exhibits slightly better $R^2$ and $RSE$, though the p-value of $x^2$ shows that it is a non-significant coef. 
+
+*(h)* Repeat (a)–(f) after modifying the data generation process in
+such a way that there is less noise in the data. The model (3.39)
+should remain the same. You can do this by decreasing the variance
+of the normal distribution used to generate the error term
+$\epsilon$ in (b). 
+
+```{r}
+eps_13h <- rnorm(n = 100, mean = 0, sd = 0.1)
+y_13h <- -1 + 0.5*x_13a + eps_13h
+ggplot() +
+        geom_point(aes(x = x_13a, y = y_13h))
+```
+
+```{r}
+fit_13h <- lm(y_13h ~ x_13a)
+fit_13h %>% broom::tidy()
+
+beta0_hat_13h <- fit_13h %>% broom::tidy() %>% select(estimate) %>% filter(row_number() == 1) %>% unlist
+
+beta1_hat_13h <- fit_13h %>% broom::tidy() %>% select(estimate) %>% filter(row_number() == 2) %>% unlist
+```
+
+```{r}
+ggplot() +
+        geom_point(aes(x = x_13a, y = y_13h)) +
+        geom_abline(aes(intercept = beta0_hat_13h, slope = beta1_hat_13h), color = "blue") +
+        geom_abline(aes(intercept = beta0_13c, slope = beta1_13c), color = "red") +
+        annotate(geom = "text", x = 2, y = -0.5, label = "Least squares", color = "blue") + 
+        annotate(geom = "text", x = 1, y = 0, label = "Population regression", color = "red")
+```
+
+```{r}
+fit_13h %>% glance()
+```
+
+Describe your results.
+
+>**Answer:** We observe higher $R^2$ and lower $RSE$ when decreasing noise.
+
+*(i)* Repeat (a)–(f) after modifying the data generation process in
+such a way that there is more noise in the data. The model
+(3.39) should remain the same. You can do this by increasing
+the variance of the normal distribution used to generate the
+error term $\epsilon$ in (b). 
+
+```{r}
+eps_13i <- rnorm(n = 100, mean = 0, sd = 1)
+y_13i <- -1 + 0.5*x_13a + eps_13i
+ggplot() +
+        geom_point(aes(x = x_13a, y = y_13i))
+```
+
+```{r}
+fit_13i <- lm(y_13i ~ x_13a)
+fit_13i %>% broom::tidy()
+
+beta0_hat_13i <- fit_13i %>% broom::tidy() %>% select(estimate) %>% filter(row_number() == 1) %>% unlist
+
+beta1_hat_13i <- fit_13i %>% broom::tidy() %>% select(estimate) %>% filter(row_number() == 2) %>% unlist
+```
+
+```{r}
+ggplot() +
+        geom_point(aes(x = x_13a, y = y_13i)) +
+        geom_abline(aes(intercept = beta0_hat_13i, slope = beta1_hat_13i), color = "blue") +
+        geom_abline(aes(intercept = beta0_13c, slope = beta1_13c), color = "red") +
+        annotate(geom = "text", x = 2, y = -0.5, label = "Least squares", color = "blue") + 
+        annotate(geom = "text", x = 1, y = 0, label = "Population regression", color = "red")
+```
+
+```{r}
+fit_13i %>% glance()
+```
+
+Describe your results.
+
+>**Answer:** We observe lower $R^2$ and higher $RSE$ when decreasing noise.
+
+*(j)* What are the confidence intervals for $\beta_0$ and $\beta_1$ based on the
+original data set, the noisier data set, and the less noisy data
+set? Comment on your results.
+
+```{r}
+confint_tidy(fit_13h) %>%
+        bind_cols(confint_tidy(fit_13e)) %>%
+        bind_cols(confint_tidy(fit_13i))
+```
+
+>**Answer:** Conf interval increases with noise. From left to right $\epsilon$ with sd = 0.1, 0.5, 1
+
+*Ex.14* This problem focuses on the collinearity problem.
+
+*(a)* Perform the following commands in R:
+
+```{r}
+set.seed(1)
+x1_14a = runif(100)
+x2_14a = 0.5 * x1_14a + rnorm(100)/10
+y_14a = 2 + 2 * x1_14a + 0.3 * x2_14a + rnorm(100)
+```
+
+The last line corresponds to creating a linear model in which y is
+a function of x1 and x2. Write out the form of the linear model.
+What are the regression coefficients?
+
+>**Answer:** $y = 2 + 2 \times x_1 + 0.3 \times x_2 + \epsilon$ The regr. coef. are: $\beta_0 = 2, \beta_1 = 2, \beta_2 = 0.3$
+
+*(b)* What is the correlation between x1 and x2? Create a scatterplot
+displaying the relationship between the variables.
+
+>**Answer:** We observer high linear correlation.
+
+```{r}
+cor(x1_14a, x2_14a)
+```
+
+
+```{r}
+ggplot() + 
+        geom_point(aes(x = x1_14a, y = x2_14a)) + 
+        geom_smooth(method = lm, aes(x = x1_14a, y = x2_14a))
+```
+
+*(c)* Using this data, fit a least squares regression to predict y using
+x1 and x2. Describe the results obtained. What are $\hat\beta_0$, $\hat\beta_1$, and
+$\hat\beta_2$? How do these relate to the true $\beta_0$, $\beta_1$, and $\beta_2$? Can you
+reject the null hypothesis H0 : $\beta$1 = 0? How about the null
+hypothesis H0 : $\beta_2$ = 0?
+
+>**Answer:** $\hat\beta$ coef. are close to true $\beta$ coef.
+Null hypothesis $H_0 : \beta_1 = 0$ can be rejected as the observer p-value is less than 0.05. The opposite is the situation with the null hypothesis $H_0 : \beta_2 = 0$
+
+```{r}
+fit_14c <- lm(y_14a ~ x1_14a + x2_14a)
+fit_14c %>% broom::tidy()
+```
+
+*(d)* Now fit a least squares regression to predict y using only x1.
+Comment on your results. Can you reject the null hypothesis
+H0 : $\beta_1$ = 0?
+
+>**Answer:** The null hypothesis can be rejected. We observer much different $\hat\beta_1$
+
+```{r}
+fit_14d <- lm(y_14a ~ x1_14a)
+fit_14d %>% broom::tidy()
+```
+
+*(e)* Now fit a least squares regression to predict y using only x2.
+Comment on your results. Can you reject the null hypothesis
+H0 : $\beta_1$ = 0?
+
+>**Answer:** The null hypothesis can be rejected. We observer much different $\hat\beta_1$
+
+```{r}
+fit_14e <- lm(y_14a ~ x2_14a)
+fit_14e %>% broom::tidy()
+```
+
+*(f)* Do the results obtained in (c)–(e) contradict each other? Explain
+your answer.
+
+>**Answer:** The results show that there is collinearity between $x_1$ and $x_2$ which results in significant increase and st. error and p-value of $\hat\beta_2$ when both predictors are used. In this way we fail to reject the $H_0$ for $\hat\beta_2$.
+
+*(g)* Now suppose we obtain one additional observation, which was
+unfortunately mismeasured.
+
+```{r}
+x1_14g = c(x1_14a, 0.1)
+x2_14g = c(x2_14a, 0.8)
+y_14g = c(y_14a, 6)
+```
+
+Re-fit the linear models from (c) to (e) using this new data.
+
+What effect does this new observation have on the each of the models?
+In each model, is this observation an outlier? A high-leverage
+point? Both? 
+
+Explain your answers.
+
+```{r}
+fit_14g_1 <- lm(y_14g ~ x1_14g)
+fit_14g_2 <- lm(y_14g ~ x2_14g)
+fit_14g_3 <- lm(y_14g ~ x1_14g + x2_14g)
+```
+
+>**Answer:** Let's look at each model and answer the questions. We will name "original" the model without the additional observation and "additional" the one with the additional observation.
+
+`y ~ x1` 
+
+The effect to the model is negative as $R^2$ is decreased and $RSE$ is increased.
+
+```{r}
+g14_temp1 <- fit_14d %>% 
+        glance() %>%
+        select(r.squared, sigma, statistic, p.value) %>%
+        add_column(model = "original", .before = 1)
+
+g14_temp2 <- fit_14g_1 %>% 
+        glance() %>%
+        select(r.squared, sigma, statistic, p.value) %>%
+        add_column(model = "additional", .before = 1)
+
+bind_rows(g14_temp1, g14_temp2)
+```
+
+Coef. std. error slightly increases after adding the new observation.
+
+```{r}
+g14_temp3 <- fit_14d %>% 
+        broom::tidy() %>%
+        add_column(model = "original", .before = 1)
+
+g14_temp4 <- fit_14g_1 %>% 
+        broom::tidy() %>%
+        add_column(model = "additional", .before = 1)
+
+bind_rows(g14_temp3, g14_temp4) %>%
+        arrange(term)
+```
+
+The additional observation is an outlier as it has studentized rezidual greater than 3 
+
+```{r message=FALSE, warning=FALSE}
+grid.arrange(plotDiag(fit_14d, "fitted") + labs(title="original"), 
+             plotDiag(fit_14g_1, "fitted") + labs(title="additional"), 
+             ncol = 2
+             )
+```
+
+We do not observe points which leverage value greatly exceed $(p + 1) / n$. 
+
+```{r}
+tibble(
+        model = c("original", "additional"),
+        leverage = c((nrow(g14_temp3) - 1 + 1)/length(y_14a),
+                     (nrow(g14_temp4) - 1 + 1)/length(y_14g)
+                     )
+)
+```
+
+```{r message=FALSE, warning=FALSE}
+grid.arrange(plotDiag(fit_14d, "leverage") + labs(title="original"), 
+             plotDiag(fit_14g_1, "leverage") + labs(title="additional"), 
+             ncol = 2
+             )
+```
+
+`y ~ x2`
+
+The effect to the model is positive as $R^2$ is increased while $RSE$ is almost the same.
+
+```{r}
+g14_tmp1 <- fit_14e %>% 
+        glance() %>%
+        select(r.squared, sigma, statistic, p.value) %>%
+        add_column(model = "original", .before = 1)
+
+g14_tmp2 <- fit_14g_2 %>% 
+        glance() %>%
+        select(r.squared, sigma, statistic, p.value) %>%
+        add_column(model = "additional", .before = 1)
+
+bind_rows(g14_tmp1, g14_tmp2)
+```
+
+Coef. std. error slightly decreases after adding the new observation.
+
+```{r}
+g14_tmp3 <- fit_14e %>% 
+        broom::tidy() %>%
+        add_column(model = "original", .before = 1)
+
+g14_tmp4 <- fit_14g_2 %>% 
+        broom::tidy() %>%
+        add_column(model = "additional", .before = 1)
+
+bind_rows(g14_tmp3, g14_tmp4) %>%
+        arrange(term)
+```
+
+The additional observation is not an outlier as its studentized rezidual is less than 3 
+
+```{r message=FALSE, warning=FALSE}
+grid.arrange(plotDiag(fit_14e, "fitted") + labs(title="original"), 
+             plotDiag(fit_14g_2, "fitted") + labs(title="additional"), 
+             ncol = 2
+             )
+```
+
+We observe point in "additional" model which leverage value greatly exceed $(p + 1) / n$. 
+
+```{r}
+tibble(
+        model = c("original", "additional"),
+        leverage = c((nrow(g14_tmp3) - 1 + 1)/length(y_14a),
+                     (nrow(g14_tmp4) - 1 + 1)/length(y_14g)
+                     )
+)
+```
+
+```{r message=FALSE, warning=FALSE}
+grid.arrange(plotDiag(fit_14e, "leverage") + labs(title="original"), 
+             plotDiag(fit_14g_2, "leverage") + labs(title="additional"), 
+             ncol = 2
+             )
+```
+
+`y ~ x1 + x2`
+
+The effect to the model is negligible as $R^2$ and $RSE$ are almost the same.
+
+```{r}
+g14_tm1 <- fit_14c %>% 
+        glance() %>%
+        select(r.squared, sigma, statistic, p.value) %>%
+        add_column(model = "original", .before = 1)
+
+g14_tm2 <- fit_14g_3 %>% 
+        glance() %>%
+        select(r.squared, sigma, statistic, p.value) %>%
+        add_column(model = "additional", .before = 1)
+
+bind_rows(g14_tm1, g14_tm2)
+```
+
+$\beta_2$ in the "original" model is insignificant (p-value not less than 0.5).
+$\beta_1$ in the "additional" model is insignificant.
+
+```{r}
+g14_tm3 <- fit_14c %>% 
+        broom::tidy() %>%
+        add_column(model = "original", .before = 1)
+
+g14_tm4 <- fit_14g_3 %>% 
+        broom::tidy() %>%
+        add_column(model = "additional", .before = 1)
+
+bind_rows(g14_tm3, g14_tm4) %>%
+        arrange(term)
+```
+
+The additional observation is not an outlier as its studentized rezidual is less than 3 
+
+```{r message=FALSE, warning=FALSE}
+grid.arrange(plotDiag(fit_14c, "fitted") + labs(title="original"), 
+             plotDiag(fit_14g_3, "fitted") + labs(title="additional"), 
+             ncol = 2
+             )
+```
+
+We observe point in "additional" model which leverage value greatly exceed $(p + 1) / n$. 
+
+```{r}
+tibble(
+        model = c("original", "additional"),
+        leverage = c((nrow(g14_tm3) - 1 + 1)/length(y_14a),
+                     (nrow(g14_tm4) - 1 + 1)/length(y_14g)
+                     )
+)
+```
+
+```{r message=FALSE, warning=FALSE}
+grid.arrange(plotDiag(fit_14c, "leverage") + labs(title="original"), 
+             plotDiag(fit_14g_3, "leverage") + labs(title="additional"), 
+             ncol = 2
+             )
+```
+
+*Ex.15* This problem involves the Boston data set, which we saw in the lab
+for this chapter. We will now try to predict per capita crime rate
+using the other variables in this data set. In other words, per capita
+crime rate is the response, and the other variables are the predictors.
+
+*(a)* For each predictor, fit a simple linear regression model to predict
+the response. 
+
+```{r}
+str(Boston)
+```
+
+```{r}
+
+Boston %>%
+        dplyr::select(-crim) %>%
+        map_df(function(x) glance(lm(Boston$crim ~ x, data = Boston))) %>%
+        mutate(predictor = as_factor(Boston %>% dplyr::select(-crim) %>% names())) %>%
+        dplyr::select(predictor, everything()) %>%
+        arrange(p.value) %>%
+        dplyr::select(predictor, r.squared, sigma, statistic, p.value)
+```
+
+
+Describe your results. 
+
+In which of the models is there a statistically significant association between the predictor and the response? 
+
+Create some plots to back up your assertions.
+
+>**Answer:** When we observer p-values greater than 0.05 we can not reject $H_0$ that there is no relationship between response and predictors. 
+
+```{r}
+plot_15a_1 <- ggplot(Boston) +
+        geom_point(aes(x = rad, y = crim), pch = 1)
+
+plot_15a_2 <- ggplot(Boston) +
+        geom_point(aes(x = chas, y = crim), pch = 1)
+
+grid.arrange(plot_15a_1 + labs(title="smallest p-value"), 
+             plot_15a_2 + labs(title="biggest p-value"), 
+             ncol = 2)
+```
+
+*(b)* Fit a multiple regression model to predict the response using
+all of the predictors. 
+
+```{r}
+fit_15b <- lm(crim ~ ., data = Boston)
+
+fit_15b %>% broom::tidy() %>%
+        filter(p.value < 0.05)
+
+
+```
+
+
+Describe your results. 
+
+For which predictors can we reject the null hypothesis H0 : $\beta$j = 0?
+
+>**Answer:** We reject the null hypothesis for all predictors with p-value smaller than 0.05.
+
+*(c)* How do your results from (a) compare to your results from (b)?
+Create a plot displaying the univariate regression coefficients
+from (a) on the x-axis, and the multiple regression coefficients
+from (b) on the y-axis. That is, each predictor is displayed as a
+single point in the plot. Its coefficient in a simple linear regression
+model is shown on the x-axis, and its coefficient estimate
+in the multiple linear regression model is shown on the y-axis.
+
+>**Answer:** Plot and table with coef. displayed below. As demonstrated, results differ.
+
+```{r}
+tbl_15c <- Boston %>%
+        dplyr::select(-crim) %>%
+        map_df(function(x) broom::tidy(lm(Boston$crim ~ x, data = Boston))) %>%
+        filter(term != "(Intercept)") %>%
+        mutate(predictor = as_factor(Boston %>% dplyr::select(-crim) %>% names())) %>%
+        dplyr::select(predictor, estimate) %>%
+        bind_cols(fit_15b %>% broom::tidy() %>% filter(term != "(Intercept)") %>% dplyr::select(estimate)) %>%
+        rename(uni = estimate, multi = estimate1)
+
+tbl_15c
+```
+
+```{r}
+ggplot(tbl_15c) +
+        geom_point(aes(x = uni, y = multi), pch = 1)
+```
+
+*(d)* Is there evidence of non-linear association between any of the
+predictors and the response? To answer this question, for each
+predictor X, fit a model of the form
+
+$Y = \beta_0 + \beta_1X + \beta_2X^2 + \beta_3X^3$
+
+>**Answer:** We will answer this question by testing the null hypothesis $H_0 : \beta_1 = \beta_2 = \beta_3 = 0$. From the table we see that there is no evidence for the `chas` predictor.
+
+```{r}
+tbl_15d <- Boston %>%
+        dplyr::select(-crim) %>%
+        map_df(function(x) broom::glance(lm(Boston$crim ~ poly(x, 3, raw = TRUE), data = Boston))) %>%
+        mutate(predictor = as_factor(Boston %>% dplyr::select(-crim) %>% names())) %>%
+        dplyr::select(predictor, everything()) %>%
+        arrange(desc(p.value))
+
+tbl_15d
+
+```
+
+
+
+
