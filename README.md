@@ -1,7 +1,7 @@
 # ISLR_ex
 Practise with the ISLR book 
 
-https://kirilraytchev.github.io/ISLR_ex
+[ISLR_ex repo web site link here](https://kirilraytchev.github.io/ISLR_ex)
 
 [Solutions of Ch1]() no exercises
 

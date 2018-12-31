@@ -1,7 +1,9 @@
 ---
 title: "Ch2"
 author: "Kiril Raytchev"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r setup, include=FALSE}
