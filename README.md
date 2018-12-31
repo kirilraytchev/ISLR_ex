@@ -1,6 +1,10 @@
 # ISLR_ex
-Practice with the ISLR book 
+Practise with the ISLR book 
 
-[Solutions of Ch2](http://htmlpreview.github.io/?https://github.com/kirilraytchev/ISLR_ex/blob/master/Ch2.html)
+[Solutions of Ch1]() no exercises
 
-[Solutions of Ch3](http://htmlpreview.github.io/?https://github.com/kirilraytchev/ISLR_ex/blob/master/Ch3.html)
+[Solutions of Ch2](https://kirilraytchev.github.io/ISLR_ex/Ch2.html)
+
+[Solutions of Ch3](https://kirilraytchev.github.io/ISLR_ex/Ch3.html)
+
+[Solutions of Ch4](https://kirilraytchev.github.io/ISLR_ex/Ch4.html)
