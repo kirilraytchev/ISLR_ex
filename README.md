@@ -14,11 +14,11 @@ no exercises to solve
 
 ## [Ch3](https://kirilraytchev.github.io/ISLR_ex/Ch3.html)
 
-### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#conceptual)
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#conceptual)
 
-[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#ex1) | [Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#ex5)
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex1) | [Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex5)
 
-### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#applied)
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#applied)
 
 ## [Ch4](https://kirilraytchev.github.io/ISLR_ex/Ch4.html) 
 
