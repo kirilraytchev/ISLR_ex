@@ -6,20 +6,55 @@ My practise with the book: [An Introduction to Statistical Learning with Applica
 
 # Solutions
 
-## [Ch1]() 
+## [Ch1 Introduction]() 
 
 no exercises to solve
 
-## [Ch2](https://kirilraytchev.github.io/ISLR_ex/Ch2.html)
+## [Ch2 Statistical Learning](https://kirilraytchev.github.io/ISLR_ex/Ch2.html)
 
-## [Ch3](https://kirilraytchev.github.io/ISLR_ex/Ch3.html)
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#conceptual)
+
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex1) |
+[Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex2) |
+[Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex3) |
+[Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex4) |
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex5) |
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex6) |
+[Ex.7](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex7)
+
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#applied)
+
+[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex8) |
+[Ex.9](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex9) |
+[Ex.10](https://kirilraytchev.github.io/ISLR_ex/Ch2.html#ex10) 
+
+## [Ch3 Linear Regression](https://kirilraytchev.github.io/ISLR_ex/Ch3.html)
 
 ### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#conceptual)
 
-[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex1) | [Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex5)
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex1) |
+[Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex2) |
+[Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex3) |
+[Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex4) |
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex5) |
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex6) |
+[Ex.7](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex7)
 
 ### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#applied)
 
-## [Ch4](https://kirilraytchev.github.io/ISLR_ex/Ch4.html) 
+[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex8) |
+[Ex.9](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex9) |
+[Ex.10](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex10) |
+[Ex.11](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex11) |
+[Ex.12](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex12) |
+[Ex.13](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex13) |
+[Ex.14](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex14) |
+[Ex.15](https://kirilraytchev.github.io/ISLR_ex/Ch3.html#ex15) 
+
+## [Ch4 Classification](https://kirilraytchev.github.io/ISLR_ex/Ch4.html) 
+
+in progress
+
+# Conclusion
 
 in progress

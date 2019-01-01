@@ -1,5 +1,5 @@
 ---
-title: "Ch3"
+title: "Ch3 Linear Regression"
 author: "Kiril Raytchev"
 output: 
   html_document: 
@@ -37,12 +37,16 @@ $H_0 : \beta_1 = 0$
 $H_0 : \beta_2 = 0$  
 The null hypoteses can not be rejected for the `newspaper`   
 
-*Ex.2* Carefully explain the differences between the KNN classifier and KNN
+# *Ex.2* {#ex2} 
+
+Carefully explain the differences between the KNN classifier and KNN
 regression methods.
 
 >**Answer:** KNN classifier clissifies an output to one group or another, where the KNN regression predicts an ouput value based on input. Both methods are "trained" on distances to nearest observations.
 
-*Ex.3* Suppose we have a data set with five predictors, X1 =GPA, X2 = IQ,
+# *Ex.3* {#ex3} 
+
+Suppose we have a data set with five predictors, X1 =GPA, X2 = IQ,
 X3 = Gender (1 for Female and 0 for Male), X4 = Interaction between
 GPA and IQ, and X5 = Interaction between GPA and Gender. The
 response is starting salary after graduation (in thousands of dollars).
@@ -83,7 +87,9 @@ effect. Justify your answer.
 
 >**Answer:** False. p-value should be examined for statistical significance of the effect.
 
-*Ex.4* I collect a set of data (n = 100 observations) containing a single
+# *Ex.4* {#ex4} 
+
+I collect a set of data (n = 100 observations) containing a single
 predictor and a quantitative response. I then fit a linear regression
 model to the data, as well as a separate cubic regression, i.e. Y =
 $\beta_0$ + $\beta_1X$ + $\beta_2X^2$ + $\beta_3X^3$ + $\epsilon$.
@@ -134,12 +140,16 @@ What is $a_i\prime$
 
 >**Answer:** `r knitr::include_graphics("Ch3Ex5_3.jpg")`
 
-*Ex.6* Using (3.4), argue that in the case of simple linear regression, the
+# *Ex.6* {#ex6} 
+
+Using (3.4), argue that in the case of simple linear regression, the
 least squares line always passes through the point $(\bar{x}, \bar{y})$.
 
 >**Answer** By definition, from (3.4), we have: $\bar{y} = \hat{\beta}_0 + \hat{\beta}_1\bar{x}$ and considering that the coef. for least squares line are exactly $\hat{\beta}_0$ and $\hat{\beta}_1$ than for each $y_i$ and $x_i$ we have in fact $\bar{y}$ and $\bar{x}$
 
-*Ex.7* It is claimed in the text that in the case of simple linear regression
+# *Ex.7* {#ex7} 
+
+It is claimed in the text that in the case of simple linear regression
 of Y onto X, the $R^2$ statistic (3.17) is equal to the square of the
 correlation between X and Y (3.18). Prove that this is the case. For
 simplicity, you may assume that $\overline{x} = \overline{y} = 0$.
@@ -152,7 +162,9 @@ simplicity, you may assume that $\overline{x} = \overline{y} = 0$.
 
 ***
 
-*Ex.8* This question involves the use of simple linear regression on the Auto
+# *Ex.8* {#ex8} 
+
+This question involves the use of simple linear regression on the Auto
 data set.
 
 *(a)* Use the lm() function to perform a simple linear regression with
@@ -242,7 +254,9 @@ plot(lm(mpg ~ horsepower, data = Auto))
 
 * Residuals vs Leverage shows that observations 34 and 117 have a high leverage (we have unusual predictor $x$, given the response $y$ in the observations)
 
-*Ex.9* This question involves the use of multiple linear regression on the
+# *Ex.9* {#ex9} 
+
+This question involves the use of multiple linear regression on the
 Auto data set.
 
 *(a)* Produce a scatterplot matrix which includes all of the variables
@@ -471,7 +485,9 @@ tbl_9_f
 
 ```
 
-*Ex.10* This question should be answered using the Carseats data set.
+# *Ex.10* {#ex10} 
+
+This question should be answered using the Carseats data set.
 
 ```{r}
 as_tibble(Carseats)
@@ -568,7 +584,9 @@ We observe points which leverage value greatly exceed $(p + 1) / n$: `r (nrow(co
 plotDiag(fit_10e,"leverage")
 ```
 
-*Ex.11* In this problem we will investigate the t-statistic for the null hypothesis
+# *Ex.11* {#ex11} 
+
+In this problem we will investigate the t-statistic for the null hypothesis
 H0 : $\beta$ = 0 in simple linear regression without an intercept. To
 begin, we generate a predictor x and a response y as follows.
 
@@ -701,7 +719,9 @@ lm(x ~ y) %>% broom::tidy()
 lm(y ~ x) %>% broom::tidy()
 ```
 
-*Ex.12* This problem involves simple linear regression without an intercept.
+# *Ex.12* {#ex12} 
+
+This problem involves simple linear regression without an intercept.
 
 *(a)* Recall that the coefficient estimate $\hat\beta$ for the linear regression of
 Y onto X without an intercept is given by (3.38). Under what
@@ -748,7 +768,9 @@ lm(y_12c ~ x_12c + 0) %>% broom::tidy()
 lm(x_12c ~ y_12c + 0) %>% broom::tidy()
 ```
 
-*Ex.13* In this exercise you will create some simulated data and will fit simple
+# *Ex.13* {#ex13} 
+
+In this exercise you will create some simulated data and will fit simple
 linear regression models to it. Make sure to use set.seed(1) prior to
 starting part (a) to ensure consistent results.
 
@@ -945,7 +967,9 @@ confint_tidy(fit_13h) %>%
 
 >**Answer:** Conf interval increases with noise. From left to right $\epsilon$ with sd = 0.1, 0.5, 1
 
-*Ex.14* This problem focuses on the collinearity problem.
+# *Ex.14* {#ex14} 
+
+This problem focuses on the collinearity problem.
 
 *(a)* Perform the following commands in R:
 
@@ -1225,7 +1249,9 @@ grid.arrange(plotDiag(fit_14c, "leverage") + labs(title="original"),
              )
 ```
 
-*Ex.15* This problem involves the Boston data set, which we saw in the lab
+# *Ex.15* {#ex15} 
+
+This problem involves the Boston data set, which we saw in the lab
 for this chapter. We will now try to predict per capita crime rate
 using the other variables in this data set. In other words, per capita
 crime rate is the response, and the other variables are the predictors.

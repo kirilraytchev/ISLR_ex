@@ -1,5 +1,5 @@
 ---
-title: "Ch2"
+title: "Ch2 Statistical Learning"
 author: "Kiril Raytchev"
 output: 
   html_document: 
@@ -16,8 +16,15 @@ library(GGally)
 library(gridExtra)
 ```
 
-## Conceptual
-*Ex.1* For each of parts (a) through (d), indicate whether we would generally
+***
+
+# Conceptual {#conceptual}
+
+***
+
+# *Ex.1* {#ex1} 
+
+For each of parts (a) through (d), indicate whether we would generally
 expect the performance of a flexible statistical learning method to be
 better or worse than an inflexible method. Justify your answer.
 
@@ -41,7 +48,9 @@ high.
 
 >**Answer:** Flexible is worse. A lot of "noise" would be reflected by the model.
 
-*Ex.2* Explain whether each scenario is a classification or regression problem,
+# *Ex.2* {#ex2} 
+
+Explain whether each scenario is a classification or regression problem,
 and indicate whether we are most interested in inference or prediction.
 Finally, provide n and p.
 
@@ -70,7 +79,9 @@ and the % change in the German market.
 
 >**Answer:** Regression. Prediction. `n = nbr. of weeks in 2012`, `p = US + GB + DE`
 
-*Ex.3* We now revisit the bias-variance decomposition.
+# *Ex.3* {#ex3} 
+
+We now revisit the bias-variance decomposition.
 
 *(a)* Provide a sketch of typical (squared) bias, variance, training error,
 test error, and Bayes (or irreducible) error curves, on a single
@@ -89,7 +100,9 @@ part (a).
 4. test error - reflects bias and variance;  
 5. bayes error - irreducible error;    
 
-*Ex.4* You will now think of some real-life applications for statistical learning.
+# *Ex.4* {#ex4} 
+
+You will now think of some real-life applications for statistical learning.
 
 *(a)* Describe three real-life applications in which classification might
 be useful. Describe the response, as well as the predictors. Is the
@@ -137,7 +150,9 @@ might be useful.
 2. User types in terms of reaction to notifications;  
 3. User types in terms of actions taken.  
 
-*Ex.5* What are the advantages and disadvantages of a very flexible (versus
+# *Ex.5* {#ex5} 
+
+What are the advantages and disadvantages of a very flexible (versus
 a less flexible) approach for regression or classification? Under what
 circumstances might a more flexible approach be preferred to a less
 flexible approach? When might a less flexible approach be preferred?
@@ -147,7 +162,9 @@ Adv. -> low training error; low bias/Disadv. -> high variance;
 More flex. is preferred when we have a lot of non-linear training data;  
 Less flex. is preferred when we have linear training data; 
 
-*Ex.6* Describe the differences between a parametric and a non-parametric
+# *Ex.6* {#ex6} 
+
+Describe the differences between a parametric and a non-parametric
 statistical learning approach. What are the advantages of a parametric
 approach to regression or classification (as opposed to a nonparametric
 approach)? What are its disadvantages?
@@ -157,7 +174,9 @@ In param. approach we assume the form of the function / In non-param we do not;
 Adv. of param. approach is that it is simpler to estimate just the coeff. of the chosen form of function;  
 Disadv. of param. approach is that the assumption for the form of the function might be wrong.
 
-*Ex.7* The table below provides a training data set containing six observations,
+# *Ex.7* {#ex7} 
+
+The table below provides a training data set containing six observations,
 three predictors, and one qualitative response variable.
 
 ```{r}
@@ -225,9 +244,15 @@ small? Why?
 >**Answer:**  
 Best value for **K** is small. Then it would be more flexible and go with the nonlinear boundry.
 
-## Applied
+***
 
-*Ex.8* This exercise relates to the College data set, which can be found in
+# Applied {#applied}
+
+***
+
+# *Ex.8* {#ex8} 
+
+This exercise relates to the College data set, which can be found in
 the file College.csv. It contains a number of variables for 777 different
 universities and colleges in the US. The variables are...
 
@@ -299,7 +324,9 @@ p4 <-
 grid.arrange(p1, p2, p3, p4, nrow = 2)
 ```
 
-*Ex.9* This exercise involves the Auto data set studied in the lab. Make sure
+# *Ex.9* {#ex9} 
+
+This exercise involves the Auto data set studied in the lab. Make sure
 that the missing values have been removed from the data.
 
 *(a)* Which of the predictors are quantitative, and which are qualitative?
@@ -414,7 +441,9 @@ answer.
 >**Answer:**
 see *(f)*
 
-*Ex.10* This exercise involves the Boston housing data set.
+# *Ex.10* {#ex10} 
+
+This exercise involves the Boston housing data set.
 
 *(a)*
 ```{r}
