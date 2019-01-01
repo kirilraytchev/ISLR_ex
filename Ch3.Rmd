@@ -18,9 +18,15 @@ library(gridExtra)
 library(grid)
 ```
 
-## Conceptual
+***
 
-*Ex.1* Describe the null hypotheses to which the p-values given in Table 3.4
+# Conceptual {#conceptual}
+
+***
+
+# *Ex.1* {#ex1} 
+
+Describe the null hypotheses to which the p-values given in Table 3.4
 correspond. Explain what conclusions you can draw based on these
 p-values. Your explanation should be phrased in terms of sales, TV,
 radio, and newspaper, rather than in terms of the coefficients of the
@@ -108,7 +114,9 @@ enough information to tell? Justify your answer.
 
 >**Answer:** Impossible to tell. Higher degree model could have higher test RSS due to overfitting with the train RSS or it could have lower test RSS if the true relationship deviates from linear to an "acceptable" degree.
 
-*Ex.5* Consider the fitted values that result from performing linear regression
+# *Ex.5* {#ex5} 
+
+Consider the fitted values that result from performing linear regression
 without an intercept. In this setting, the ith fitted value takes
 the form
 
@@ -138,7 +146,11 @@ simplicity, you may assume that $\overline{x} = \overline{y} = 0$.
 
 >**Answer:** `r knitr::include_graphics("Ch3Ex7.jpg")`
 
-## Applied
+***
+
+# Applied {#applied}
+
+***
 
 *Ex.8* This question involves the use of simple linear regression on the Auto
 data set.

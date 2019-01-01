@@ -6,10 +6,20 @@ My practise with the book: [An Introduction to Statistical Learning with Applica
 
 # Solutions
 
-[Solutions of Ch1]() no exercises
+## [Ch1]() 
 
-[Solutions of Ch2](https://kirilraytchev.github.io/ISLR_ex/Ch2.html)
+no exercises to solve
 
-[Solutions of Ch3](https://kirilraytchev.github.io/ISLR_ex/Ch3.html)
+## [Ch2](https://kirilraytchev.github.io/ISLR_ex/Ch2.html)
 
-[Solutions of Ch4](https://kirilraytchev.github.io/ISLR_ex/Ch4.html)
+## [Ch3](https://kirilraytchev.github.io/ISLR_ex/Ch3.html)
+
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#conceptual)
+
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#ex1) | [Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#ex5)
+
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch3.html/#applied)
+
+## [Ch4](https://kirilraytchev.github.io/ISLR_ex/Ch4.html) 
+
+in progress
