@@ -53,8 +53,22 @@ no exercises to solve
 
 ## [Ch4 Classification](https://kirilraytchev.github.io/ISLR_ex/Ch4.html) 
 
-in progress
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#conceptual)
+
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex1) |
+[Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex2) |
+[Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex3) |
+[Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex4) |
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex5) |
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex6) |
+[Ex.7](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex7) |
+[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex8) |
+[Ex.9](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex9)
+
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#applied)
+
+[Ex.10](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex10) in progress ....
 
 # Conclusion
 
-in progress
+in progress ....
