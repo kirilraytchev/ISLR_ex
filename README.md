@@ -67,7 +67,16 @@ no exercises to solve
 
 ### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#applied)
 
-[Ex.10](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex10) in progress ....
+[Ex.10](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex10) |
+[Ex.11](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex11) |
+[Ex.12](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex12) |
+[Ex.13](https://kirilraytchev.github.io/ISLR_ex/Ch4.html#ex13) 
+
+## [Ch5 Resampling Methods](https://kirilraytchev.github.io/ISLR_ex/Ch5.html) 
+
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#conceptual)
+
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex1) .... inprogress
 
 # Conclusion
 

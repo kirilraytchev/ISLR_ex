@@ -13,10 +13,13 @@ library(MASS)
 library(tidymodels)
 library(recipes)
 library(tidyverse)
+library(forcats)
 library(GGally)
 library(gridExtra)
 library(grid)
 library(scales)
+library(cowplot)
+library(rlang)
 ```
 
 ***
@@ -275,8 +278,1134 @@ weekly returns for 21 years, from the beginning of 1990 to the end of
 *(a)* Produce some numerical and graphical summaries of the Weekly
 data. Do there appear to be any patterns?
 
->**Answer:** ....(in progress)
+>**Answer:** What follows are numerical and graphical summaries with comments:
+
+```{r}
+rm(list = ls())
+head(as_tibble(Weekly))
+```
+
+```{r}
+str(Weekly)
+```
 
 
+```{r}
+summary(Weekly)
+```
+
+We see that Ups and Downs relate almost 55/45 in `Direction` column
+
+```{r message=FALSE, warning=FALSE}
+ggpairs(Weekly)
+```
+
+A strong correlation is observed only between `Volume` and `Year`.
+
+*(b)* Use the full data set to perform a logistic regression with
+Direction as the response and the five lag variables plus Volume
+as predictors. 
+
+```{r}
+lr_mod <- logistic_reg()
+
+lr_fit <-
+  lr_mod %>%
+  set_engine("glm") %>%
+  fit(Direction ~ Lag1+Lag2+Lag3+Lag4+Lag5+Volume, data = Weekly)
+
+lr_fit
+```
+
+
+Use the summary function to print the results. 
+
+```{r}
+lr_fit$fit %>% broom::tidy()
+```
+
+
+Do any of the predictors appear to be statistically significant? If so,
+which ones?
+
+>**Answer:** Only `Lag2` appears to be statistically significant.
+
+*(c)* Compute the confusion matrix and overall fraction of correct
+predictions. 
+
+```{r}
+
+Weekly_pred <- predict(lr_fit, Weekly) %>%
+        bind_cols(Weekly)
+
+conf_mat(Weekly_pred, Direction, .pred_class)
+```
+
+
+Explain what the confusion matrix is telling you
+about the types of mistakes made by logistic regression.
+
+```{r}
+lr_summary <- summary(conf_mat(Weekly_pred, Direction, .pred_class))
+lr_summary
+```
+
+
+>**Answer:** The model correctly predicted `r percent(lr_summary$.estimate[1])` of Directions, which is model's accuracy.  
+The model poorly identified $Downs$ and very well $Ups$, respectively `r percent(lr_summary$.estimate[3])` and `r percent(lr_summary$.estimate[4])`
+
+*(d)* Now fit the logistic regression model using a training data period
+from 1990 to 2008, with Lag2 as the only predictor. 
+
+```{r}
+Weekly_train_10d <- Weekly %>%
+        filter(Year >= 1990 & Year <=2008)
+
+lr_fit_10d <-
+        lr_mod %>%
+        set_engine("glm") %>%
+        fit(Direction ~ Lag2, data = Weekly_train_10d)
+
+lr_fit_10d
+```
+
+Compute the confusion matrix and the overall fraction of correct predictions
+for the held out data (that is, the data from 2009 and 2010).
+
+```{r}
+Weekly_test_10d <- Weekly %>%
+        filter(Year >= 2009 & Year <=2010)
+
+Weekly_pred_10d <- predict(lr_fit_10d, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+conf_mat(Weekly_pred_10d, Direction, .pred_class)
+```
+
+> **Answer:** We get the following metrics for the model:  
+
+```{r}
+lr_summary_10d <- summary(conf_mat(Weekly_pred_10d, Direction, .pred_class))
+lr_summary_10d
+```
+
+Observed accuracy is `r percent(lr_summary_10d$.estimate[1])`
+
+*(e)* Repeat (d) using LDA.
+
+>**Answer:** Metrics for the LDA model are the same as the ones for the logistic regression. 
+
+```{r}
+lr_fit_10e <- lda(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_test_10e <- Weekly %>%
+        filter(Year >= 2009 & Year <=2010)
+
+Weekly_pred_10e <- Weekly_test_10e %>%
+        mutate(.pred_class = predict(lr_fit_10e, Weekly_test_10e)$class)
+
+lr_summary_10e <- summary(conf_mat(Weekly_pred_10e, Direction, .pred_class))
+lr_summary_10e
+```
+
+Observed accuracy is `r percent(lr_summary_10e$.estimate[1])`
+
+*(f)* Repeat (d) using QDA.
+
+>**Answer:** We get the following result for the QDA model: 
+
+```{r}
+lr_fit_10f <- qda(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_test_10f <- Weekly %>%
+        filter(Year >= 2009 & Year <=2010)
+
+Weekly_pred_10f <- Weekly_test_10f %>%
+        mutate(.pred_class = predict(lr_fit_10f, Weekly_test_10f)$class)
+
+lr_summary_10f <- accuracy(conf_mat(Weekly_pred_10f, Direction, .pred_class)$table)
+lr_summary_10f
+```
+
+Observed accuracy is `r percent(lr_summary_10f$.estimate[1])`
+
+*(g)* Repeat (d) using KNN with K = 1.
+
+>**Answer:** We get the following result for the KNN model:
+
+```{r}
+lr_mod_10g <- nearest_neighbor(neighbors = 1)
+
+lr_fit_10g <-
+        lr_mod_10g %>%
+        set_engine("kknn") %>%
+        fit(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_test_10g <- Weekly %>%
+        filter(Year >= 2009 & Year <=2010)
+
+Weekly_pred_10g <- predict(lr_fit_10g, Weekly_test_10g) %>%
+        bind_cols(Weekly_test_10g)
+
+lr_summary_10g <- summary(conf_mat(Weekly_pred_10g, Direction, .pred_class))
+lr_summary_10g
+```
+
+Observed accuracy is `r percent(lr_summary_10g$.estimate[1])`
+
+*(h)* Which of these methods appears to provide the best results on
+this data?
+
+>**Answer:** In terms of accuracy we observer the following:
+
+```{r}
+tbl_10h <- tibble(
+        model = c("LogReg", 
+                  "LDA", 
+                  "QDA", 
+                  "KNN"),
+        accuracy = c(percent(lr_summary_10d$.estimate[1]),
+                     percent(lr_summary_10e$.estimate[1]),
+                     percent(lr_summary_10f$.estimate[1]),
+                     percent(lr_summary_10g$.estimate[1])
+                     
+        )
+)
+
+tbl_10h
+```
+
+LogReg and LDA  exhibit the same highest accuracy.
+
+*(i)* Experiment with different combinations of predictors, including
+possible transformations and interactions, for each of the
+methods. Report the variables, method, and associated confusion
+matrix that appears to provide the best results on the held
+out data. Note that you should also experiment with values for
+K in the KNN classifier.
+
+>**Answer:** We experiment with the following combinations of predictors, transformations and interactions:
+
+* Using both `Lag1` and `Lag2` as predictors, considering they exhibit the lowest p-values.
+
+```{r}
+#LogReg
+logReg_fit_10i <-
+        lr_mod %>%
+        set_engine("glm") %>%
+        fit(Direction ~ Lag1 + Lag2, data = Weekly_train_10d)
+
+Weekly_logReg_pred_10i <- predict(logReg_fit_10i, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+logReg_summary_10i <- summary(conf_mat(Weekly_logReg_pred_10i, Direction, .pred_class))
+
+#LDA
+lda_fit_10i <- lda(Direction ~ Lag1 + Lag2, data = Weekly_train_10d)
+
+Weekly_lda_pred_10i <- Weekly_test_10d %>%
+        mutate(.pred_class = predict(lda_fit_10i, Weekly_test_10d)$class)
+
+lda_summary_10i <- summary(conf_mat(Weekly_lda_pred_10i, Direction, .pred_class))
+
+#QDA
+qda_fit_10i <- qda(Direction ~ Lag1 + Lag2, data = Weekly_train_10d)
+
+Weekly_qda_pred_10i <- Weekly_test_10d %>%
+        mutate(.pred_class = predict(qda_fit_10i, Weekly_test_10d)$class)
+
+qda_summary_10i <- summary(conf_mat(Weekly_qda_pred_10i, Direction, .pred_class))
+
+#KNN
+knn_mod_10i <- nearest_neighbor(neighbors = 1)
+
+knn_fit_10i <-
+        knn_mod_10i %>%
+        set_engine("kknn") %>%
+        fit(Direction ~ Lag1 + Lag2, data = Weekly_train_10d)
+
+Weekly_knn_pred_10i <- predict(knn_fit_10i, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+knn_summary_10i <- summary(conf_mat(Weekly_knn_pred_10i, Direction, .pred_class))
+
+#Comparison table
+tbl_10i <- tibble(
+        model = c("LogReg", 
+                  "LDA", 
+                  "QDA", 
+                  "KNN"),
+        accuracy_Lag2 = c(percent(lr_summary_10d$.estimate[1]),
+                          percent(lr_summary_10e$.estimate[1]),
+                          percent(lr_summary_10f$.estimate[1]),
+                          percent(lr_summary_10g$.estimate[1])
+        ),
+        accuracy_Lag1_Lag2 = c(percent(logReg_summary_10i$.estimate[1]),
+                               percent(lda_summary_10i$.estimate[1]),
+                               percent(qda_summary_10i$.estimate[1]),
+                               percent(knn_summary_10i$.estimate[1])
+        )
+        
+)
+
+tbl_10i
+
+```
+
+We observe no improvement in terms of accuracy.
+
+* Using increasing value of K = 3, 5, 10, 100
+
+```{r message=FALSE, warning=FALSE}
+#knn 3
+knn3_mod_10i <- nearest_neighbor(neighbors = 3)
+
+knn3_fit_10i <-
+        knn3_mod_10i %>%
+        set_engine("kknn") %>%
+        fit(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_knn3_pred_10i <- predict(knn3_fit_10i, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+knn3_summary_10i <- summary(conf_mat(Weekly_knn3_pred_10i, Direction, .pred_class))
+
+#knn 5
+knn5_mod_10i <- nearest_neighbor(neighbors = 5)
+
+knn5_fit_10i <-
+        knn5_mod_10i %>%
+        set_engine("kknn") %>%
+        fit(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_knn5_pred_10i <- predict(knn5_fit_10i, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+knn5_summary_10i <- summary(conf_mat(Weekly_knn5_pred_10i, Direction, .pred_class))
+
+#knn 10
+knn10_mod_10i <- nearest_neighbor(neighbors = 10)
+
+knn10_fit_10i <-
+        knn10_mod_10i %>%
+        set_engine("kknn") %>%
+        fit(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_knn10_pred_10i <- predict(knn10_fit_10i, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+knn10_summary_10i <- summary(conf_mat(Weekly_knn10_pred_10i, Direction, .pred_class))
+
+#knn 100
+knn100_mod_10i <- nearest_neighbor(neighbors = 100)
+
+knn100_fit_10i <-
+        knn100_mod_10i %>%
+        set_engine("kknn") %>%
+        fit(Direction ~ Lag2, data = Weekly_train_10d)
+
+Weekly_knn100_pred_10i <- predict(knn100_fit_10i, Weekly_test_10d) %>%
+        bind_cols(Weekly_test_10d)
+
+knn100_summary_10i <- summary(conf_mat(Weekly_knn100_pred_10i, Direction, .pred_class))
+
+
+tbl_Ks_10i <- tibble(
+        accuracy = c(lr_summary_10g$.estimate[1],
+                     knn3_summary_10i$.estimate[1],
+                     knn5_summary_10i$.estimate[1],
+                     knn10_summary_10i$.estimate[1],
+                     knn100_summary_10i$.estimate[1]
+        ),
+        `1/K` = c(1/1,
+              1/3,
+              1/5,
+              1/10,
+              1/100
+        )
+        
+)
+
+ggplot(data = tbl_Ks_10i, aes(x = `1/K`, y = accuracy)) +
+        geom_point() + 
+        geom_smooth()
+```
+
+We observe highest accuracy for K = 100.
+
+In conclusion, we have not found better model in terms of accuracy from LogReg and LDA with only `Lag2` as predictor.
+
+# *Ex.11* {#ex11}
+
+In this problem, you will develop a model to predict whether a given
+car gets high or low gas mileage based on the Auto data set.
+
+*(a)* Create a binary variable, mpg01, that contains a 1 if mpg contains
+a value above its median, and a 0 if mpg contains a value below
+its median. You can compute the median using the median()
+function. Note you may find it helpful to use the data.frame()
+function to create a single data set containing both mpg01 and
+the other Auto variables.
+
+>**Answer:** Creating the binary variable is in the following code:
+
+```{r}
+# Clearing the environment
+rm(list = ls())
+
+Auto_11a <- Auto %>%
+        mutate(mpg01 = ifelse(mpg > median(mpg), 1, 0)) %>%
+        select(mpg01, everything()) %>%
+        mutate(mpg01 = as.factor(mpg01)) %>%
+        mutate(cylinders = as.factor(cylinders)) %>%
+        mutate(origin = as.factor(origin)) %>%
+        mutate(year = as.integer(year))
+
+head(Auto_11a)
+```
+
+*(b)* Explore the data graphically in order to investigate the association
+between mpg01 and the other features. Which of the other
+features seem most likely to be useful in predicting mpg01? Scatterplots
+and boxplots may be useful tools to answer this question.
+Describe your findings.
+
+>**Answer:** First we will generate some plots for the discrete variables: `cylinders` and `origin`. After that for the continuous - ` displacement`, `horsepower`, `weight`, `acceleration` and `year`. We will conclude with comments on which vars would be usefule for predicting `mpg01`
+
+* `cylinders`
+
+```{r}
+Auto_11b <- Auto_11a %>%
+        select(-mpg, -name)
+
+ggplot(Auto_11b) +
+        geom_bar(aes(cylinders, fill = mpg01)) + 
+        facet_grid(.~mpg01)
+```
+
+We see that lower mpg is associated with more cars having higher number of cylinders. 
+
+* `origin`
+
+```{r}
+ggplot(Auto_11b) +
+        geom_bar(aes(origin, fill = origin)) + 
+        facet_grid(.~mpg01)
+```
+
+We see that origin 1 is strongly associated with lower mpg. 
+
+* `displacement`, `horsepower`, `weight`
+
+```{r}
+displ_11b <- ggplot(Auto_11b) +
+        geom_boxplot(aes(x = mpg01, y = displacement, fill = mpg01)) + 
+        theme(legend.position="none")
+        
+horse_11b <- ggplot(Auto_11b) +
+        geom_boxplot(aes(x = mpg01, y = horsepower, fill = mpg01)) +
+        theme(legend.position="none")
+
+weight_11b <- ggplot(Auto_11b) +
+        geom_boxplot(aes(x = mpg01, y = weight, fill = mpg01)) +
+        theme(legend.position="none")
+
+grid.arrange(displ_11b, horse_11b, weight_11b, ncol = 3)
+        
+```
+
+We see clear relation of mpg with the vars.
+
+* `acceleration` and `year`
+
+```{r}
+acc_11b <- ggplot(Auto_11b) +
+        geom_boxplot(aes(x = mpg01, y = acceleration, fill = mpg01)) +
+        theme(legend.position="none")
+
+year_11b <- ggplot(Auto_11b) +
+        geom_boxplot(aes(x = mpg01, y = year, fill = mpg01)) +
+        theme(legend.position="none")
+
+grid.arrange(acc_11b, year_11b, ncol = 2)
+```
+
+We see clear relation of mpg with the vars.
+
+All vars exhibit good prediction capability for mpg.
+
+*(c)* Split the data into a training set and a test set.
+
+```{r}
+set.seed(123)
+auto_split_11c <- initial_split(Auto_11b, prop = 3/4) 
+head(training(auto_split_11c))
+```
+
+*(d)* Perform LDA on the training data in order to predict mpg01
+using the variables that seemed most associated with mpg01 in
+(b). 
+
+```{r}
+lda_fit_11d <- lda(mpg01 ~ ., data = training(auto_split_11c))
+
+Auto_11d_pred <- testing(auto_split_11c) %>%
+        mutate(.pred_class = predict(lda_fit_11d, testing(auto_split_11c))$class)
+
+lda_summary_11d <- summary(conf_mat(Auto_11d_pred, mpg01, .pred_class))
+lda_summary_11d
+```
+
+What is the test error of the model obtained?
+
+>**Answer:** We get `r percent(1 - lda_summary_11d$.estimate[1])`
+
+*(e)* Perform QDA on the training data in order to predict mpg01
+using the variables that seemed most associated with mpg01 in
+(b). 
+
+We have to remove `cylinders` as being highly collinear.
+
+```{r}
+qda_fit_11e <- qda(mpg01 ~ ., data = training(auto_split_11c) %>% select(-cylinders))
+
+Auto_11e_pred <- testing(auto_split_11c) %>%
+        mutate(.pred_class = predict(qda_fit_11e, testing(auto_split_11c))$class)
+
+qda_summary_11e <- summary(conf_mat(Auto_11e_pred, mpg01, .pred_class))
+qda_summary_11e
+```
+
+
+What is the test error of the model obtained?
+
+>**Answer:** We get `r percent(1 - qda_summary_11e$.estimate[1])`
+
+*(f)* Perform logistic regression on the training data in order to predict
+mpg01 using the variables that seemed most associated with
+mpg01 in (b). 
+
+```{r}
+lr_mod_11f <- logistic_reg()
+
+logReg_fit_11f <-
+        lr_mod_11f %>%
+        set_engine("glm") %>%
+        fit(mpg01 ~ ., data = training(auto_split_11c))
+
+logReg_pred_11f <- predict(logReg_fit_11f, testing(auto_split_11c)) %>%
+        bind_cols(testing(auto_split_11c))
+
+logReg_summary_11f <- summary(conf_mat(logReg_pred_11f, mpg01, .pred_class))
+logReg_summary_11f
+```
+
+
+What is the test error of the model obtained?
+
+>**Answer:** We get `r percent(1 - logReg_summary_11f$.estimate[1])`
+
+*(g)* Perform KNN on the training data, with several values of K, in
+order to predict mpg01. Use only the variables that seemed most
+associated with mpg01 in (b). 
+
+We remove `cylinders` and `origin` factor vars  and we no longer get the error: $Error in get(ctr, mode = "function", envir = parent.frame()) : object 'contr.dummy' of mode 'function' was not found$
+
+```{r message=FALSE, warning=FALSE}
+#knn 3
+knn3_mod_11g <- nearest_neighbor(neighbors = 3)
+
+knn3_fit_11g <-
+        knn3_mod_11g %>%
+        set_engine("kknn") %>%
+        fit(mpg01 ~ ., data = training(auto_split_11c) %>% select(-cylinders, -origin))
+
+knn3_pred_11g <- predict(knn3_fit_11g, testing(auto_split_11c)) %>%
+        bind_cols(testing(auto_split_11c))
+
+knn3_summary_11g <- summary(conf_mat(knn3_pred_11g, mpg01, .pred_class))
+
+#knn 5
+knn5_mod_11g <- nearest_neighbor(neighbors = 5)
+
+knn5_fit_11g <-
+        knn5_mod_11g %>%
+        set_engine("kknn") %>%
+        fit(mpg01 ~ ., data = training(auto_split_11c) %>% select(-cylinders, -origin))
+
+knn5_pred_11g <- predict(knn5_fit_11g, testing(auto_split_11c)) %>%
+        bind_cols(testing(auto_split_11c))
+
+knn5_summary_11g <- summary(conf_mat(knn5_pred_11g, mpg01, .pred_class))
+
+#knn 10
+knn10_mod_11g <- nearest_neighbor(neighbors = 10)
+
+knn10_fit_11g <-
+        knn10_mod_11g %>%
+        set_engine("kknn") %>%
+        fit(mpg01 ~ ., data = training(auto_split_11c) %>% select(-cylinders, -origin))
+
+knn10_pred_11g <- predict(knn10_fit_11g, testing(auto_split_11c)) %>%
+        bind_cols(testing(auto_split_11c))
+
+knn10_summary_11g <- summary(conf_mat(knn10_pred_11g, mpg01, .pred_class))
+
+#knn 100
+knn100_mod_11g <- nearest_neighbor(neighbors = 100)
+
+knn100_fit_11g <-
+        knn100_mod_11g %>%
+        set_engine("kknn") %>%
+        fit(mpg01 ~ ., data = training(auto_split_11c) %>% select(-cylinders, -origin))
+
+knn100_pred_11g <- predict(knn100_fit_11g, testing(auto_split_11c)) %>%
+        bind_cols(testing(auto_split_11c))
+
+knn100_summary_11g <- summary(conf_mat(knn100_pred_11g, mpg01, .pred_class))
+
+
+tbl_Ks_11g <- tibble(
+        accuracy = c(
+                     knn3_summary_11g$.estimate[1],
+                     knn5_summary_11g$.estimate[1],
+                     knn10_summary_11g$.estimate[1],
+                     knn100_summary_11g$.estimate[1]
+        ),
+        `1/K` = c(
+              1/3,
+              1/5,
+              1/10,
+              1/100
+        ),
+        
+        K = c(
+                3,
+                5,
+                10,
+                100
+        )
+        
+)
+
+```
+
+
+What test errors do you obtain?
+
+```{r}
+tbl_Ks_11g %>%
+        select(-`1/K`) %>%
+        arrange(desc(accuracy))
+```
+
+
+Which value of K seems to perform the best on this data set?
+
+```{r message=FALSE, warning=FALSE}
+ggplot(data = tbl_Ks_11g, aes(x = `1/K`, y = accuracy)) +
+        geom_point() + 
+        geom_smooth()
+```
+
+
+>**Answer:** Best test errors are observer with $K = 5$ and $K = 100$
+
+```{r}
+# clear the environment
+rm(list = ls())
+```
+
+
+# *Ex.12* {#ex12}
+
+This problem involves writing functions.
+
+*(a)*Write a function, Power(), that prints out the result of raising 2
+to the 3rd power. In other words, your function should compute
+$2^3$ and print out the results.
+
+>**Answer:** Following is the implementation:
+
+```{r}
+Power <- function(){
+        2^3     
+}
+
+Power()
+```
+
+*(b)* Create a new function, Power2(), that allows you to pass any
+two numbers, x and a, and prints out the value of x^a. You can
+do this by beginning your function with the line
+
+> Power2 =function (x,a){
+
+You should be able to call your function by entering, for instance,
+
+> Power2 (3,8)
+
+on the command line. This should output the value of $3^8$, namely,
+6, 561.
+
+>**Answer:** Following is the implementation:
+
+```{r}
+Power2 <- function(x, y){
+        x^y
+}
+
+Power2(3, 8)
+```
+
+*(c)* Using the Power2() function that you just wrote, compute $10^3$,
+$8^17$, and $131^3$.
+
+>**Answer:** Following is the implementation:
+
+```{r}
+Power2(10, 3)
+Power2(8, 17)
+Power2(131, 3)
+```
+
+*(d)* Now create a new function, Power3(), that actually returns the
+result x^a as an R object, rather than simply printing it to the
+screen. That is, if you store the value x^a in an object called
+result within your function, then you can simply return() this
+result, using the following line:
+
+return (result)
+
+The line above should be the last line in your function, before
+the } symbol.
+
+>**Answer:** Following is the implementation:
+
+```{r}
+Power3 <- function(x, y){
+        result <- x^y
+        return(result)
+}
+```
+
+*(e)* Now using the Power3() function, create a plot of f(x) = x2.
+The x-axis should display a range of integers from 1 to 10, and
+the y-axis should display x2. Label the axes appropriately, and
+use an appropriate title for the figure. Consider displaying either
+the x-axis, the y-axis, or both on the log-scale. You can do this
+by using log=‘‘x’’, log=‘‘y’’, or log=‘‘xy’’ as arguments to
+the plot() function.
+
+>**Answer:** Following is the implementation:
+
+```{r}
+x <- seq(1:10)
+y <- Power3(x, 2)
+
+ggplot() +
+        geom_point(aes(x = log(x), y = log(y)))
+```
+
+*(f)* Create a function, PlotPower(), that allows you to create a plot
+of x against x^a for a fixed a and for a range of values of x. For
+instance, if you call
+
+> PlotPower (1:10 ,3)
+
+then a plot should be created with an x-axis taking on values
+1, 2, . . . , 10, and a y-axis taking on values $1^3$, $2^3$, . . . , $10^3$.
+
+>**Answer:** FOllowing is the code:
+
+```{r}
+PlotPower <- function(x, a){
+        y <- x^a
+        ggplot() + 
+                geom_point(aes(x = x, y = y))
+}
+
+PlotPower(1:10, 3)
+```
+
+```{r}
+# clear the environment
+rm(list = ls())
+```
+
+
+# *Ex.13* {#ex13}
+
+Using the Boston data set, fit classification models in order to predict
+whether a given suburb has a crime rate above or below the median.
+Explore logistic regression, LDA, and KNN models using various subsets
+of the predictors. Describe your findings.
+
+>**Answer:** Following is the exploration of logreg, LDA and KNN models using various subset of predictors:
+
+* Overview of Boston data
+
+```{r}
+head(Boston)
+```
+
+```{r}
+str(Boston)
+```
+
+```{r}
+summary(Boston)
+```
+
+* Adding crimrate - above/below median crime rate var
+
+```{r}
+Boston_13 <- Boston %>%
+        mutate(crimrate = as.factor(ifelse(crim>median(crim), "high", "low"))) %>%
+        select(crimrate, everything())
+
+head(Boston_13)
+```
+
+* Checking if crimrate is able to split any of the vars so that we could use it as predictor vars.
+
+```{r}
+attr(Boston_13, "factor") <- "crimrate"
+attr(Boston_13, "relg1") <- c("zn", "indus", "nox")
+attr(Boston_13, "relg2") <- c("rm", "age", "dis")
+attr(Boston_13, "relg3") <- c("rad", "tax", "ptratio")
+attr(Boston_13, "relg4") <- c("black", "lstat", "medv")
+
+fac_var <- attr(Boston_13, "factor")
+rel_vars_1 <- attr(Boston_13, "relg1")
+rel_vars_2 <- attr(Boston_13, "relg2")
+rel_vars_3 <- attr(Boston_13, "relg3")
+rel_vars_4 <- attr(Boston_13, "relg4")
+
+grob1_13 <- ggduo(
+        Boston_13, fac_var, rel_vars_1,
+        mapping = aes(color = crimrate)
+)
+grob2_13 <- ggduo(
+        Boston_13, fac_var, rel_vars_2,
+        mapping = aes(color = crimrate)
+)
+grob3_13 <- ggduo(
+        Boston_13, fac_var, rel_vars_3,
+        mapping = aes(color = crimrate)
+)
+grob4_13 <- ggduo(
+        Boston_13, fac_var, rel_vars_4,
+        mapping = aes(color = crimrate)
+)
+
+plot_grid(
+  ggmatrix_gtable(grob1_13),
+  ggmatrix_gtable(grob2_13),
+  ggmatrix_gtable(grob3_13),
+  ggmatrix_gtable(grob4_13),
+  nrow = 1
+)
+```
+
+We observe very good split for `indus`, `nox`, `age`, `dis`, `rad` and `tax`. Single var overlap is observed for `zn` and `black`. In-between in terms of clearness of split are `rm`, `ptratio`, `lstat` and `medv`.
+
+* Checking if crimrate is able to split any pair of vars so that we could use them as predictor vars.
+
+```{r message=FALSE, warning=FALSE}
+ggpairs(Boston_13, 
+        mapping = aes(color = crimrate), 
+        columns = c(3,4,5,6,7,8,9,10,11,12,13,14,15)
+)
+```
+
+We observe that `nox` is highly correlated with `indus`, `age` and `dis`, hence we choose only `indus` instead of all 4 vars for prediction purposes.   
+We observe that `rm` is highly correlated with `lstat` and `medv`, hence we choose only `rm`  instead of all 3 vars for prediction purposes.  
+We choose also `ptratio` for prediction purposes.
+
+Furthermore, we observe that `nox` and `rm`, as well as `nox` and `ptratio` combinations achieve good split in terms of crime rate - high and low rates separate with clear boundary between. Not the same situation is observed for the `rm` and `ptratio` combination.
+
+* Using **Log Reg**. Adding/removing predictors and comparing test rates. 
+
+```{r message=FALSE, warning=FALSE}
+set.seed(123)
+Boston_13_split <- initial_split(Boston_13) 
+Boston_13_training <- training(Boston_13_split)
+Boston_13_testing <- testing(Boston_13_split)
+
+#LogRegError function
+
+LogRegError <- function(formula,
+                        outc,
+                        df_training, 
+                        df_testing
+){
+        resp <- enquo(outc)
+        
+        logReg_mod <- logistic_reg()
+        
+        logReg_fit <-
+                logReg_mod %>%
+                set_engine("glm", control = list(maxit = 50)) %>%
+                fit(formula, data = df_training)
+        
+        #print(logReg_fit)
+        
+        logReg_pred <- predict(logReg_fit, df_testing) %>%
+                bind_cols(df_testing)
+        
+        logReg_summary <- summary(conf_mat(logReg_pred, !!resp, .pred_class))
+        #browser()
+        logReg_summary
+        1 - logReg_summary$.estimate[1]
+        
+}
+
+tbl_logReg_errors <-
+        
+tibble(Error = c(LogRegError(crimrate ~ .,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing), 
+                 
+                 
+                 LogRegError(crimrate ~ nox + rm + ptratio,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing),
+                 
+                 LogRegError(crimrate ~ nox + ptratio,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing),
+                 
+                 LogRegError(crimrate ~ nox + rm,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing)
+                ),
+       Formula = c(format(crimrate ~ .),
+                   format(crimrate ~ nox + rm + ptratio),
+                   format(crimrate ~ nox + ptratio),
+                   format(crimrate ~ nox + rm)
+       ),
+       Model = as_factor("LogReg")
+) %>%
+        arrange(Error)
+
+
+tbl_logReg_errors
+
+```
+
+As observed from graphics `nox` and `ptratio` achieve lowest error.
+
+* Using **LDA**. Adding/removing predictors and comparing test rates.
+
+```{r}
+
+# LDA Error function
+
+LDAError <- function(formula,
+                     outc,
+                     df_training, 
+                     df_testing){
+        
+        resp <- enquo(outc)
+        
+        lda_fit <- lda(formula, data = df_training)
+        #browser()
+        df_pred <- df_testing %>%
+                mutate(.pred_class = predict(lda_fit, df_testing)$class)
+        
+        lda_summary <- summary(conf_mat(df_pred, !!resp, .pred_class))
+        1 - lda_summary$.estimate[1]
+        
+}
+
+tbl_LDA_errors <-
+
+tibble(Error = c(LDAError(crimrate ~ .,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing), 
+                 
+                 
+                 LDAError(crimrate ~ nox + rm + ptratio,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing),
+                 
+                 LDAError(crimrate ~ nox + ptratio,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing),
+                 
+                 LDAError(crimrate ~ nox + rm,
+                             crimrate,
+                             Boston_13_training,
+                             Boston_13_testing)
+                ),
+       Formula = c(format(crimrate ~ .),
+                   format(crimrate ~ nox + rm + ptratio),
+                   format(crimrate ~ nox + ptratio),
+                   format(crimrate ~ nox + rm)
+       ),
+       Model = as_factor("LDA")
+) %>%
+        arrange(Error)
+
+
+tbl_LDA_errors
+```
+
+For this method we achieve lowest error when all predictors are used.
+
+* Using **KNN**. Adding/removing predictors, varying $Ks$ and comparing test rates.
+
+```{r}
+
+
+# KNN Error function
+
+KNNError <- function(formula,
+                     outc,
+                     k,
+                     df_training, 
+                     df_testing
+){
+        resp <- enquo(outc)
+        
+        knn_mod <- nearest_neighbor(neighbors = k)
+        
+        knn_fit <-
+                knn_mod %>%
+                set_engine("kknn") %>%
+                fit(formula, data = df_training)
+        
+        #print(logReg_fit)
+        
+        knn_pred <- predict(knn_fit, df_testing) %>%
+                bind_cols(df_testing)
+        
+        knn_summary <- summary(conf_mat(knn_pred, !!resp, .pred_class))
+        #browser()
+        knn_summary
+        1 - knn_summary$.estimate[1]
+        
+}
+
+tbl_knn_errors <-
+
+tibble(
+        Ks = 1:100,
+        Error = map_dbl(1:100,
+                        function(x)
+                                KNNError(
+                                        formula = crimrate ~ .,
+                                        outc = crimrate,
+                                        k = x,
+                                        df_training = Boston_13_training,
+                                        df_testing = Boston_13_testing
+                                )
+        ),
+        Formula = format(crimrate ~ .)
+) %>%
+        bind_rows(
+                tibble(
+                        Ks = 1:100,
+                        Error = map_dbl(1:100,
+                                        function(x)
+                                                KNNError(
+                                                        formula = crimrate ~ nox + ptratio,
+                                                        outc = crimrate,
+                                                        k = x,
+                                                        df_training = Boston_13_training,
+                                                        df_testing = Boston_13_testing
+                                                )
+                        ),
+                        Formula = format(crimrate ~ nox + ptratio)
+                )
+                
+        ) %>%
+        
+                bind_rows(
+                tibble(
+                        Ks = 1:100,
+                        Error = map_dbl(1:100,
+                                        function(x)
+                                                KNNError(
+                                                        formula = crimrate ~ nox + rm,
+                                                        outc = crimrate,
+                                                        k = x,
+                                                        df_training = Boston_13_training,
+                                                        df_testing = Boston_13_testing
+                                                )
+                        ),
+                        Formula = format(crimrate ~ nox + rm)
+                )
+                
+        ) %>%
+        
+                bind_rows(
+                tibble(
+                        Ks = 1:100,
+                        Error = map_dbl(1:100,
+                                        function(x)
+                                                KNNError(
+                                                        formula = crimrate ~ nox + ptratio + rm,
+                                                        outc = crimrate,
+                                                        k = x,
+                                                        df_training = Boston_13_training,
+                                                        df_testing = Boston_13_testing
+                                                )
+                        ),
+                        Formula = format(crimrate ~ nox + ptratio + rm)
+                )
+                
+        )
+
+
+ ggplot(tbl_knn_errors) + 
+         geom_line(aes(x = Ks, y = Error)) +
+         facet_wrap( ~ Formula)
+```
+
+We observe that lowest error is achieved for the case below:
+
+```{r}
+tbl_knn_errors %>% 
+        select(Formula, Ks, Error) %>% 
+        filter(Error == min(Error)) %>%
+        filter(Ks == min(Ks))
+```
+
+* The following ranking in terms of test error rate, formula and model can be summarized:
+
+```{r message=FALSE, warning=FALSE}
+
+tbl_knn_errors %>% 
+        select(Formula, Ks, Error) %>% 
+        filter(Error == min(Error)) %>%
+        filter(Ks == min(Ks)) %>%
+        mutate(Model = as_factor("KNN")) %>%
+        select(-Ks) %>%
+        bind_rows(
+                tbl_LDA_errors %>%
+                        select(Model, Error, Formula) %>%
+                        filter(Error == min(Error))
+        ) %>%
+        bind_rows(
+                tbl_logReg_errors %>%
+                        select(Model, Error, Formula) %>%
+                        filter(Error == min(Error))
+        ) %>%
+        arrange(Error) %>%
+        
+        ggplot() +
+        geom_col(aes(x = fct_reorder(Model, desc(Error)), y = Error, fill = Formula)) +
+        labs(x = "Model") +
+        coord_flip()
+```
 
 

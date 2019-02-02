@@ -1,0 +1,33 @@
+---
+title: "Ch5 Resampling Methods"
+author: "Kiril Raytchev"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR)
+library(MASS)
+library(tidymodels)
+library(recipes)
+library(tidyverse)
+library(forcats)
+library(GGally)
+library(gridExtra)
+library(grid)
+library(scales)
+library(cowplot)
+library(rlang)
+```
+
+***
+
+# Conceptual {#conceptual}
+
+***
+
+# *Ex.1* {#ex1} 
+
+.... in progress
