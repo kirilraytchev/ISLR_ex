@@ -76,7 +76,14 @@ no exercises to solve
 
 ### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#conceptual)
 
-[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex1) .... inprogress
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex1) |
+[Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex2) | 
+[Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex3) |
+[Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex4)
+
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#applied)
+
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex5) ....in progress
 
 # Conclusion
 
