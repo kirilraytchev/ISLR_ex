@@ -441,7 +441,7 @@ ggplot() +
         store[i]=sum(sample (1:100 , rep =TRUE)==4) &gt;0
  }
  mean(store)</code></pre>
-<pre><code>## [1] 0.623</code></pre>
+<pre><code>## [1] 0.6365</code></pre>
 <p>which is close to what we calculate with formula in <em>(f)</em>: 63.2%</p>
 </div>
 <div id="ex3" class="section level1">
@@ -485,10 +485,689 @@ The disadvantages are:<br />
 <div id="ex5" class="section level1">
 <h1><em>Ex.5</em></h1>
 <p>In Chapter 4, we used logistic regression to predict the probability of default using <code>income</code> and <code>balance</code> on the <code>Default</code> data set. We will now estimate the test error of this logistic regression model using the validation set approach. Do not forget to set a random seed before beginning your analysis.</p>
+<pre class="r"><code>set.seed(123)</code></pre>
 <p><em>(a)</em> Fit a logistic regression model that uses <code>income</code> and <code>balance</code> to predict <code>default</code>.</p>
 <blockquote>
-<p><strong>Answer:</strong> ….</p>
+<p><strong>Answer:</strong> Following is the fit:</p>
 </blockquote>
+<pre class="r"><code>logreg_mod &lt;- logistic_reg()
+
+logreg_fit &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance, data = Default)
+
+logreg_fit$fit %&gt;% broom::tidy()</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   term           estimate  std.error statistic   p.value
+##   &lt;chr&gt;             &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept) -11.5       0.435         -26.5  2.96e-155
+## 2 income        0.0000208 0.00000499      4.17 2.99e-  5
+## 3 balance       0.00565   0.000227       24.8  3.64e-136</code></pre>
+<p><em>(b)</em> Using the validation set approach, estimate the test error of this model. In order to do this, you must perform the following steps:</p>
+<p><em>(i)</em> Split the sample set into a training set and a validation set.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the split:</p>
+</blockquote>
+<pre class="r"><code>DefaultSplit &lt;- initial_split(Default) </code></pre>
+<p><em>(ii)</em> Fit a multiple logistic regression model using only the training observations.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the fit:</p>
+</blockquote>
+<pre class="r"><code>logreg_fit_ii &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance, data = training(DefaultSplit))
+
+logreg_fit_ii$fit %&gt;% broom::tidy()</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   term           estimate  std.error statistic   p.value
+##   &lt;chr&gt;             &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept) -11.3       0.488         -23.2  5.41e-119
+## 2 income        0.0000232 0.00000567      4.08 4.45e-  5
+## 3 balance       0.00547   0.000254       21.6  4.61e-103</code></pre>
+<p><em>(iii)</em> Obtain a prediction of default status for each individual in the validation set by computing the posterior probability of default for that individual, and classifying the individual to the <code>default</code> category if the posterior probability is greater than 0.5.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the prediction:</p>
+</blockquote>
+<pre class="r"><code>logreg_preds &lt;- predict(logreg_fit_ii, type = &quot;prob&quot;, testing(DefaultSplit)) %&gt;%
+  mutate(.pred_default = as_factor(ifelse(.pred_Yes &gt; 0.5, &quot;Yes&quot;, &quot;No&quot;)))
+
+logreg_preds</code></pre>
+<pre><code>## # A tibble: 2,500 x 3
+##    .pred_No .pred_Yes .pred_default
+##       &lt;dbl&gt;     &lt;dbl&gt; &lt;fct&gt;        
+##  1    0.998 0.00218   No           
+##  2    0.998 0.00198   No           
+##  3    1.000 0.0000202 No           
+##  4    0.987 0.0130    No           
+##  5    0.995 0.00475   No           
+##  6    0.999 0.000878  No           
+##  7    0.953 0.0473    No           
+##  8    0.943 0.0570    No           
+##  9    1.000 0.000187  No           
+## 10    0.998 0.00170   No           
+## # ... with 2,490 more rows</code></pre>
+<p><em>(iv)</em> Compute the validation set error, which is the fraction of the observations in the validation set that are misclassified.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the computation:</p>
+</blockquote>
+<pre class="r"><code>valid_set_error &lt;- logreg_preds %&gt;%
+  bind_cols(testing(DefaultSplit)) %&gt;%
+  select(.pred_default, default) %&gt;%
+  mutate(valid = if_else(.pred_default == default, 1, 0)) %&gt;%
+  summarise(
+    total_valid = sum(valid),
+    total = n(),
+    valid_set_error = total_valid/total
+  ) %&gt;%
+  pull(valid_set_error)
+
+percent(1-valid_set_error)</code></pre>
+<pre><code>## [1] &quot;2.12%&quot;</code></pre>
+<p><em>(c)</em> Repeat the process in (b) three times, using three different splits of the observations into a training set and a validation set. Comment on the results obtained.</p>
+<pre class="r"><code>rm(list = ls())</code></pre>
+<blockquote>
+<p><strong>Answer:</strong> We repeat the process, defining different seeds, in the following code:</p>
+</blockquote>
+<ul>
+<li>1st time</li>
+</ul>
+<pre class="r"><code>set.seed(111)
+logreg_mod &lt;- logistic_reg()
+
+DefaultSplit_1st &lt;- initial_split(Default, prop = 1/2)
+train_1st &lt;- training(DefaultSplit_1st)
+test_1st &lt;- testing(DefaultSplit_1st)
+
+logreg_fit_1st &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance, data = train_1st)
+
+logreg_preds_1st &lt;- predict(logreg_fit_1st, type = &quot;prob&quot;, test_1st) %&gt;%
+  mutate(.pred_default = as_factor(ifelse(.pred_Yes &gt; 0.5, &quot;Yes&quot;, &quot;No&quot;)))
+
+vseterror_1st &lt;- logreg_preds_1st %&gt;%
+  bind_cols(test_1st) %&gt;%
+  select(.pred_default, default) %&gt;%
+  mutate(valid = if_else(.pred_default == default, 1, 0)) %&gt;%
+  summarise(
+    total_valid = sum(valid),
+    total = n(),
+    valid_set_error = total_valid/total
+  ) %&gt;%
+  pull(valid_set_error)
+
+percent(1-vseterror_1st)</code></pre>
+<pre><code>## [1] &quot;2.68%&quot;</code></pre>
+<ul>
+<li>2nd time</li>
+</ul>
+<pre class="r"><code>set.seed(222)
+logreg_mod &lt;- logistic_reg()
+
+DefaultSplit_2nd &lt;- initial_split(Default, prop = 1/2)
+train_2nd &lt;- training(DefaultSplit_2nd)
+test_2nd &lt;- testing(DefaultSplit_2nd)
+
+logreg_fit_2nd &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance, data = train_2nd)
+
+logreg_preds_2nd &lt;- predict(logreg_fit_2nd, type = &quot;prob&quot;, test_2nd) %&gt;%
+  mutate(.pred_default = as_factor(ifelse(.pred_Yes &gt; 0.5, &quot;Yes&quot;, &quot;No&quot;)))
+
+vseterror_2nd &lt;- logreg_preds_2nd %&gt;%
+  bind_cols(test_2nd) %&gt;%
+  select(.pred_default, default) %&gt;%
+  mutate(valid = if_else(.pred_default == default, 1, 0)) %&gt;%
+  summarise(
+    total_valid = sum(valid),
+    total = n(),
+    valid_set_error = total_valid/total
+  ) %&gt;%
+  pull(valid_set_error)
+
+percent(1-vseterror_2nd)</code></pre>
+<pre><code>## [1] &quot;2.54%&quot;</code></pre>
+<ul>
+<li>3rd time</li>
+</ul>
+<pre class="r"><code>set.seed(333)
+logreg_mod &lt;- logistic_reg()
+
+DefaultSplit_3rd &lt;- initial_split(Default, prop = 1/2)
+train_3rd &lt;- training(DefaultSplit_3rd)
+test_3rd &lt;- testing(DefaultSplit_3rd)
+
+logreg_fit_3rd &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance, data = train_3rd)
+
+logreg_preds_3rd &lt;- predict(logreg_fit_3rd, type = &quot;prob&quot;, test_3rd) %&gt;%
+  mutate(.pred_default = as_factor(ifelse(.pred_Yes &gt; 0.5, &quot;Yes&quot;, &quot;No&quot;)))
+
+vseterror_3rd &lt;- logreg_preds_3rd %&gt;%
+  bind_cols(test_3rd) %&gt;%
+  select(.pred_default, default) %&gt;%
+  mutate(valid = if_else(.pred_default == default, 1, 0)) %&gt;%
+  summarise(
+    total_valid = sum(valid),
+    total = n(),
+    valid_set_error = total_valid/total
+  ) %&gt;%
+  pull(valid_set_error)
+
+percent(1-vseterror_3rd)</code></pre>
+<pre><code>## [1] &quot;2.60%&quot;</code></pre>
+<p>Validation test error rate varies depending on the split.</p>
+<pre class="r"><code>rm(list = ls())</code></pre>
+<p><em>(d)</em> Now consider a logistic regression model that predicts the probability of <code>default</code> using <code>income</code>, <code>balance</code>, and a dummy variable for <code>student</code>. Estimate the test error for this model using the validation set approach. Comment on whether or not including a dummy variable for student leads to a reduction in the test error rate.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for estimation of the test error:</p>
+</blockquote>
+<pre class="r"><code>set.seed(123)
+logreg_mod &lt;- logistic_reg()
+
+DefaultSplit &lt;- initial_split(Default)
+training &lt;- training(DefaultSplit)
+testing &lt;- testing(DefaultSplit)
+
+logreg_fit &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance + student, data = training)
+
+logreg_preds &lt;- predict(logreg_fit, type = &quot;prob&quot;, testing) %&gt;%
+  mutate(.pred_default = as_factor(ifelse(.pred_Yes &gt; 0.5, &quot;Yes&quot;, &quot;No&quot;)))
+
+vseterror &lt;- logreg_preds %&gt;%
+  bind_cols(testing) %&gt;%
+  select(.pred_default, default) %&gt;%
+  mutate(valid = if_else(.pred_default == default, 1, 0)) %&gt;%
+  summarise(
+    total_valid = sum(valid),
+    total = n(),
+    valid_set_error = total_valid/total
+  ) %&gt;%
+  pull(valid_set_error)
+
+percent(1-vseterror)</code></pre>
+<pre><code>## [1] &quot;2.28%&quot;</code></pre>
+<p>Adding <code>student</code> doesn’t reduce the validation test error.</p>
+<pre class="r"><code>rm(list = ls())</code></pre>
+</div>
+<div id="ex6" class="section level1">
+<h1><em>Ex.6</em></h1>
+<p>We continue to consider the use of a logistic regression model to predict the probability of <code>default</code> using <code>income</code> and <code>balance</code> on the <code>Default</code> data set. In particular, we will now compute estimates for the standard errors of the <code>income</code> and <code>balance</code> logistic regression coefficients in two different ways: (1) using the bootstrap, and (2) using the standard formula for computing the standard errors in the <code>glm()</code> function. Do not forget to set a random seed before beginning your analysis.</p>
+<p><em>(a)</em> Using the <code>summary()</code> and <code>glm()</code> functions, determine the estimated standard errors for the coefficients associated with <code>income</code> and <code>balance</code> in a multiple logistic regression model that uses both predictors.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for estimation of the std.error</p>
+</blockquote>
+<pre class="r"><code>logreg_mod &lt;- logistic_reg()
+
+logreg_fit &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(default ~ income + balance, data = Default)
+
+summary_betas &lt;- 
+  logreg_fit$fit %&gt;% 
+  broom::tidy() %&gt;% 
+  arrange(term) %&gt;%
+  select(std.error) %&gt;%
+  transmute(
+    std.error.summary = std.error
+  )
+
+logreg_fit$fit %&gt;% 
+  broom::tidy() %&gt;% 
+  arrange(term)</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   term           estimate  std.error statistic   p.value
+##   &lt;chr&gt;             &lt;dbl&gt;      &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept) -11.5       0.435         -26.5  2.96e-155
+## 2 balance       0.00565   0.000227       24.8  3.64e-136
+## 3 income        0.0000208 0.00000499      4.17 2.99e-  5</code></pre>
+<p><em>(b)</em> Write a function, boot.fn(), that takes as input the Default data set as well as an index of the observations, and that outputs the coefficient estimates for income and balance in the multiple logistic regression model.</p>
+<p><em>(c)</em> Use the boot() function together with your boot.fn() function to estimate the standard errors of the logistic regression coefficients for income and balance.</p>
+<blockquote>
+<p><strong>Answer (b), (c):</strong> Following is the estimation of the std.errors:</p>
+</blockquote>
+<pre class="r"><code>set.seed(1)
+logreg_mod &lt;- logistic_reg()
+
+logreg_fit &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;)
+
+bt_resamples &lt;- bootstraps(Default, times = 250)
+
+mod_form &lt;- as.formula(default ~ income + balance)
+
+glm_coefs &lt;- function(splits, ...) {
+  mod &lt;- logreg_fit %&gt;% fit(..., data = analysis(splits))
+  mod$fit %&gt;% 
+    broom::tidy()
+}
+
+bt_resamples$betas &lt;- map(.x = bt_resamples$splits, 
+                          .f = glm_coefs, 
+                          mod_form)
+
+bt_resamples %&gt;% 
+  unnest(betas) %&gt;%
+  select(term, estimate) %&gt;%
+  group_by(term) %&gt;%
+  summarise(
+    betas = mean(estimate),
+    std.error.boot = sd(estimate),
+  ) %&gt;%
+  arrange(term) %&gt;%
+  bind_cols(
+    summary_betas
+  )</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   term              betas std.error.boot std.error.summary
+##   &lt;chr&gt;             &lt;dbl&gt;          &lt;dbl&gt;             &lt;dbl&gt;
+## 1 (Intercept) -11.5           0.422             0.435     
+## 2 balance       0.00562       0.000221          0.000227  
+## 3 income        0.0000208     0.00000475        0.00000499</code></pre>
+<p><em>(d)</em> Comment on the estimated standard errors obtained using the <code>glm()</code> function and using your bootstrap function.</p>
+<blockquote>
+<p><strong>Answer:</strong> The estimated standard errors are pretty close.</p>
+</blockquote>
+<pre class="r"><code>rm(list = ls())</code></pre>
+</div>
+<div id="ex7" class="section level1">
+<h1><em>Ex.7</em></h1>
+<p>In Sections 5.3.2 and 5.3.3, we saw that the <code>cv.glm()</code> function can be used in order to compute the LOOCV test error estimate. Alternatively, one could compute those quantities using just the <code>glm()</code> and <code>predict.glm()</code> functions, and a for loop. You will now take this approach in order to compute the LOOCV error for a simple logistic regression model on the <code>Weekly</code> data set. Recall that in the context of classification problems, the LOOCV error is given in (5.4).</p>
+<p><em>(a)</em> Fit a logistic regression model that predicts <code>Direction</code> using <code>Lag1</code> and <code>Lag2</code>.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the fit:</p>
+</blockquote>
+<pre class="r"><code>set.seed(123)
+logreg_mod &lt;- logistic_reg()
+
+mod_form &lt;- as.formula(Direction ~ Lag1 + Lag2)
+
+logreg_fit &lt;-
+  logreg_mod %&gt;%
+  set_engine(&quot;glm&quot;) %&gt;%
+  fit(mod_form, data = Weekly)
+
+logreg_fit$fit %&gt;% broom::tidy()</code></pre>
+<pre><code>## # A tibble: 3 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   0.221     0.0615      3.60 0.000319
+## 2 Lag1         -0.0387    0.0262     -1.48 0.140   
+## 3 Lag2          0.0602    0.0265      2.27 0.0232</code></pre>
+<p><em>(b)</em> Fit a logistic regression model that predicts <code>Direction</code> using <code>Lag1</code> and <code>Lag2</code> using all but the first observation.</p>
+<p><em>(c)</em> Use the model from (b) to predict the direction of the first observation. You can do this by predicting that the first observation will go up if P(<code>Direction=&quot;Up&quot;|Lag1, Lag2</code>) &gt; 0.5. Was this observation correctly classified?</p>
+<p><em>(d)</em> Write a for loop from <span class="math inline">\(i\)</span> = 1 to <span class="math inline">\(i = n\)</span>, where <span class="math inline">\(n\)</span> is the number of observations in the data set, that performs each of the following steps:</p>
+<p><em>(i)</em> Fit a logistic regression model using all but the <span class="math inline">\(i\)</span>th observation to predict <code>Direction</code> using <code>Lag1</code> and <code>Lag2</code>.</p>
+<p><em>(ii)</em> Compute the posterior probability of the market moving up for the <span class="math inline">\(i\)</span>th observation.</p>
+<p><em>(iii)</em> Use the posterior probability for the <span class="math inline">\(i\)</span>th observation in order to predict whether or not the market moves up.</p>
+<p><em>(iv)</em> Determine whether or not an error was made in predicting the direction for the <span class="math inline">\(i\)</span>th observation. If an error was made, then indicate this as a 1, and otherwise indicate it as a 0.</p>
+<p><em>(e)</em> Take the average of the <span class="math inline">\(n\)</span> numbers obtained in (d)iv in order to obtain the LOOCV estimate for the test error. Comment on the results.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code to obtain the LOOCV estimate for the test error:</p>
+</blockquote>
+<pre class="r"><code>set.seed(123)
+mod_form &lt;- as.formula(Direction ~ Lag1 + Lag2)
+
+loo_resamples_weekly &lt;- loo_cv(Weekly)
+
+holdout_results &lt;- function(splits, ...) {
+
+  mod &lt;- glm(..., data = analysis(splits), family = binomial)
+
+  holdout &lt;- assessment(splits)
+
+  res &lt;- broom::augment(mod, newdata = holdout, type.predict = &quot;response&quot;)
+ 
+  prediction &lt;- as_factor(ifelse(res$.fitted &gt; 0.5, &quot;Up&quot;, &quot;Down&quot;))
+  # Calculate whether the prediction was correct
+  res$wrong &lt;- prediction != holdout$Direction
+  
+  # Return the assessment data set with the additional columns
+  res
+}
+
+loo_resamples_weekly$results &lt;- map(loo_resamples_weekly$splits, holdout_results, mod_form)
+
+test_error &lt;- loo_resamples_weekly %&gt;% 
+  unnest(results) %&gt;%
+  summarise(
+    test.error = mean(wrong)
+  ) %&gt;%
+  pull
+
+percent(test_error)</code></pre>
+<pre><code>## [1] &quot;45.0%&quot;</code></pre>
+<pre class="r"><code>#Clean-up
+rm(list = ls())</code></pre>
+</div>
+<div id="ex8" class="section level1">
+<h1><em>Ex.8</em></h1>
+<p>We will now perform cross-validation on a simulated data set.</p>
+<p><em>(a)</em> Generate a simulated data set as follows:</p>
+<pre class="r"><code>set.seed(1)
+x &lt;- rnorm(100)
+y &lt;- x - 2 * x^2 + rnorm(100)</code></pre>
+<p>In this data set, what is <span class="math inline">\(n\)</span> and what is <span class="math inline">\(p\)</span>? Write out the model used to generate the data in equation form.</p>
+<blockquote>
+<p><strong>Answer:</strong> <span class="math inline">\(n = 100\)</span>, <span class="math inline">\(p = 1\)</span>, <span class="math inline">\(Y = \beta_0 + \beta_1 \times X_1 - \beta_2 \times X_1^2 + \epsilon\)</span></p>
+</blockquote>
+<p><em>(b)</em> Create a scatterplot of X against Y . Comment on what you find.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the plot:</p>
+</blockquote>
+<pre class="r"><code>ggplot() + 
+  geom_point(mapping = aes(x = x, y = y))</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>We observe a parabolic relationship.</p>
+<p><em>(c)</em> Set a random seed, and then compute the LOOCV errors that result from fitting the following four models using least squares:</p>
+<p><em>i.</em> <span class="math inline">\(Y = \beta_0 + \beta_1X + \epsilon\)</span><br />
+<em>ii.</em> <span class="math inline">\(Y = \beta_0 + \beta_1X + \beta_2X_2^2 + \epsilon\)</span><br />
+<em>iii.</em> <span class="math inline">\(Y = \beta_0 + \beta_1X + \beta_2X_2^2 + \beta_3X_3^3 + \epsilon\)</span><br />
+<em>iv.</em> <span class="math inline">\(Y = \beta_0 + \beta_1X + \beta_2X_2^2 + \beta_3X_3^3 + \beta_4X_4^4 + \epsilon\)</span></p>
+<pre class="r"><code>data &lt;- tibble(
+  x = x,
+  y = y
+)</code></pre>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code that computes the LOOCV errors:</p>
+</blockquote>
+<ul>
+<li>Model i.</li>
+</ul>
+<pre class="r"><code>set.seed(1)
+mod_form &lt;- as.formula(y ~ x)
+
+loo_samples &lt;- loo_cv(data)
+
+holdout_results &lt;- function(splits, ...) {
+
+  mod &lt;- glm(..., data = analysis(splits))
+
+  holdout &lt;- assessment(splits)
+
+  res &lt;- broom::augment(mod, newdata = holdout)
+ 
+  # Calculate the MSE
+  res$mse &lt;- (res$y - res$.fitted)^2
+  
+  # Return the assessment data set with the additional columns
+  res
+}
+
+loo_samples$results &lt;- map(loo_samples$splits, holdout_results, mod_form)
+
+mse_error &lt;- loo_samples %&gt;%
+  unnest(results) %&gt;%
+  summarise(
+    mse = mean(mse)
+  ) %&gt;%
+  pull
+
+tblrez &lt;- tibble(
+  degree = 1,
+  mse = mse_error,
+)
+
+tblrez</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   degree   mse
+##    &lt;dbl&gt; &lt;dbl&gt;
+## 1      1  7.29</code></pre>
+<ul>
+<li>Model ii.</li>
+</ul>
+<pre class="r"><code>mod_form &lt;- as.formula(y ~ poly(x, 2))
+loo_samples$results &lt;- map(loo_samples$splits, holdout_results, mod_form)
+
+mse_error &lt;- loo_samples %&gt;%
+  unnest(results) %&gt;%
+  summarise(
+    mse = mean(mse)
+  ) %&gt;%
+  pull
+
+tblrez &lt;- tblrez %&gt;% add_row(degree = 2, mse = mse_error)
+
+tblrez[2, ]</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   degree   mse
+##    &lt;dbl&gt; &lt;dbl&gt;
+## 1      2 0.937</code></pre>
+<ul>
+<li>Model iii.</li>
+</ul>
+<pre class="r"><code>mod_form &lt;- as.formula(y ~ poly(x, 3))
+loo_samples$results &lt;- map(loo_samples$splits, holdout_results, mod_form)
+
+mse_error &lt;- loo_samples %&gt;%
+  unnest(results) %&gt;%
+  summarise(
+    mse = mean(mse)
+  ) %&gt;%
+  pull
+
+tblrez &lt;- tblrez %&gt;% add_row(degree = 3, mse = mse_error)
+
+tblrez[3, ]</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   degree   mse
+##    &lt;dbl&gt; &lt;dbl&gt;
+## 1      3 0.957</code></pre>
+<ul>
+<li>Model iv.</li>
+</ul>
+<pre class="r"><code>mod_form &lt;- as.formula(y ~ poly(x, 4))
+loo_samples$results &lt;- map(loo_samples$splits, holdout_results, mod_form)
+
+mse_error &lt;- loo_samples %&gt;%
+  unnest(results) %&gt;%
+  summarise(
+    mse = mean(mse)
+  ) %&gt;%
+  pull
+
+tblrez &lt;- tblrez %&gt;% add_row(degree = 4, mse = mse_error)
+
+tblrez[4, ]</code></pre>
+<pre><code>## # A tibble: 1 x 2
+##   degree   mse
+##    &lt;dbl&gt; &lt;dbl&gt;
+## 1      4 0.954</code></pre>
+<p><em>(d)</em> Repeat (c) using another random seed, and report your results. Are your results the same as what you got in (c)? Why?</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code using another random seed:</p>
+</blockquote>
+<pre class="r"><code>set.seed(111)
+
+get_mse_errors &lt;- function(n, dataset){
+  mod_form &lt;- as.formula(y ~ poly(x, n))
+  loo_samples &lt;- loo_cv(dataset)
+  loo_samples$results &lt;- map(loo_samples$splits, holdout_results, mod_form)
+  
+  mse_error &lt;- loo_samples %&gt;%
+    unnest(results) %&gt;%
+    summarise(
+      mse = mean(mse)
+    ) %&gt;%
+    pull
+  
+  mse_error
+}
+
+
+mse &lt;- map_dbl(1:4, get_mse_errors, data)
+mse</code></pre>
+<pre><code>## [1] 7.2881616 0.9374236 0.9566218 0.9539049</code></pre>
+<p>The results are practically the same. In both cases, (c) and (d), we have used the same data, samples to model and one-out to validate.</p>
+<p><em>(e)</em> Which of the models in (c) had the smallest LOOCV error? Is this what you expected? Explain your answer.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is a graphical representation of results and explanation:</p>
+</blockquote>
+<pre class="r"><code>ggplot(data = tblrez) +
+  geom_line(aes(y = mse, x = degree))</code></pre>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>2nd degree exhibits the lowest error, which is expected and coincides with the way we generated the dataset.</p>
+<p><em>(f)</em> Comment on the statistical significance of the coefficient estimates that results from fitting each of the models in (c) using least squares. Do these results agree with the conclusions drawn based on the cross-validation results?</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the coef estimates and after that the answers:</p>
+</blockquote>
+<pre class="r"><code>    glm(y ~ poly(x, 4), data = data) %&gt;%
+      tidy</code></pre>
+<pre><code>## # A tibble: 5 x 5
+##   term        estimate std.error statistic  p.value
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)   -1.55     0.0959   -16.2   5.17e-29
+## 2 poly(x, 4)1    6.19     0.959      6.45  4.59e- 9
+## 3 poly(x, 4)2  -23.9      0.959    -25.0   1.59e-43
+## 4 poly(x, 4)3    0.264    0.959      0.275 7.84e- 1
+## 5 poly(x, 4)4    1.26     0.959      1.31  1.93e- 1</code></pre>
+<p>1st and 2nd degree coef are only statistically significant which coincides with the results obtained from LOOCV method.</p>
+<pre class="r"><code>#Clean-up
+rm(list = ls())</code></pre>
+</div>
+<div id="ex9" class="section level1">
+<h1><em>Ex.9</em></h1>
+<p>We will now consider the <code>Boston</code> housing data set, from the <code>MASS</code> library.</p>
+<p><em>(a)</em> Based on this data set, provide an estimate for the population mean of <code>medv</code>. Call this estimate <span class="math inline">\(\hat{\mu}\)</span>.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for estimation:</p>
+</blockquote>
+<pre class="r"><code>miu.hat &lt;- mean(Boston$medv)
+miu.hat</code></pre>
+<pre><code>## [1] 22.53281</code></pre>
+<p><em>(b)</em> Provide an estimate of the standard error of <span class="math inline">\(\hat{\mu}\)</span>. Interpret this result.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for estimation:</p>
+</blockquote>
+<pre class="r"><code>std.error_miuhat &lt;- sd(Boston$medv)/sqrt(nrow(Boston))
+std.error_miuhat</code></pre>
+<pre><code>## [1] 0.4088611</code></pre>
+<p>We are now able to calculate 95% confidence interval [22.5328063 - 0.8013678] and [22.5328063 + 0.8013678].</p>
+<p><em>(c)</em> Now estimate the standard error of <span class="math inline">\(\hat{\mu}\)</span> using the bootstrap. How does this compare to your answer from (b)?</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for estimation using the bootstrap:</p>
+</blockquote>
+<pre class="r"><code>set.seed(1)
+bt_resamples &lt;- bootstraps(Boston, times = 1000)
+
+get_mean_sample &lt;- function(splits){
+  rez  &lt;- mean(analysis(splits)$medv)
+  rez
+}
+
+bt_resamples$means &lt;- map(.x = bt_resamples$splits, 
+                          .f = get_mean_sample
+) 
+
+bt_std.error_miuhat &lt;- bt_resamples %&gt;%
+  unnest(means) %&gt;%
+  summarize(
+    mean = mean(means),
+    std.error = sd(means)
+  ) %&gt;%
+  pull(std.error)
+
+bt_mean_miuhat &lt;- bt_resamples %&gt;%
+  unnest(means) %&gt;%
+  summarize(
+    mean = mean(means),
+    std.error = sd(means)
+  ) %&gt;%
+  pull(mean)
+
+bt_std.error_miuhat</code></pre>
+<pre><code>## [1] 0.415502</code></pre>
+<p>The answer is comparable to (b).</p>
+<p><em>(d)</em> Based on your bootstrap estimate from (c), provide a 95% confidence interval for the mean of <code>medv</code>. Compare it to the results obtained using <code>t.test(Boston$medv)</code>.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the 95% interval and after that the results from <code>t.test</code></p>
+</blockquote>
+<p>[21.72694 , 23.3557078]</p>
+<pre class="r"><code>t.test(Boston$medv)</code></pre>
+<pre><code>## 
+##  One Sample t-test
+## 
+## data:  Boston$medv
+## t = 55.111, df = 505, p-value &lt; 2.2e-16
+## alternative hypothesis: true mean is not equal to 0
+## 95 percent confidence interval:
+##  21.72953 23.33608
+## sample estimates:
+## mean of x 
+##  22.53281</code></pre>
+<p>The results are identical.</p>
+<p><em>(e)</em> Based on this data set, provide an estimate, <span class="math inline">\(\hat{\mu}_{med}\)</span>, for the median value of medv in the population.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for the estimate:</p>
+</blockquote>
+<pre class="r"><code>med.hat &lt;- median(Boston$medv)
+med.hat</code></pre>
+<pre><code>## [1] 21.2</code></pre>
+<p><em>(f)</em> We now would like to estimate the standard error of <span class="math inline">\(\hat{\mu}_{med}\)</span>. Unfortunately, there is no simple formula for computing the standard error of the median. Instead, estimate the standard error of the median using the bootstrap. Comment on your findings.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for the estimate of the standard error:</p>
+</blockquote>
+<pre class="r"><code>get_median_sample &lt;- function(splits){
+  rez  &lt;- median(analysis(splits)$medv)
+  rez
+}
+
+bt_resamples$medians &lt;- map(.x = bt_resamples$splits, 
+                          .f = get_median_sample
+) 
+
+bt_std.error_medianhat &lt;- bt_resamples %&gt;%
+  unnest(medians) %&gt;%
+  summarize(
+    std.error = sd(medians)
+  ) %&gt;%
+  pull(std.error)
+
+bt_std.error_medianhat</code></pre>
+<pre><code>## [1] 0.3829064</code></pre>
+<p>We observe relatively narrow 95% conf. interval.</p>
+<p><em>(g)</em> Based on this data set, provide an estimate for the tenth percentile of <code>medv</code> in Boston suburbs. Call this quantity <span class="math inline">\(\hat{\mu}_{0.1}\)</span>. (You can use the <code>quantile()</code> function.)</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for the estimate:</p>
+</blockquote>
+<pre class="r"><code>tenthhat &lt;- quantile(Boston$medv, probs = 0.1)
+tenthhat</code></pre>
+<pre><code>##   10% 
+## 12.75</code></pre>
+<p><em>(h)</em> Use the bootstrap to estimate the standard error of <span class="math inline">\(\hat{\mu}_{0.1}\)</span>. Comment on your findings.</p>
+<blockquote>
+<p><strong>Answer:</strong> Following is the code for the estimate of the std. error:</p>
+</blockquote>
+<pre class="r"><code>get_tenthperc_sample &lt;- function(splits){
+  rez  &lt;- quantile(analysis(splits)$medv, probs = 0.1)
+  rez
+}
+
+bt_resamples$tenth &lt;- map(.x = bt_resamples$splits, 
+                          .f = get_tenthperc_sample
+) 
+
+bt_std.error_tenthperc &lt;- bt_resamples %&gt;%
+  unnest(tenth) %&gt;%
+  summarize(
+    std.error = sd(tenth)
+  ) %&gt;%
+  pull(std.error)
+
+bt_std.error_tenthperc</code></pre>
+<pre><code>## [1] 0.4979704</code></pre>
 </div>
 
 

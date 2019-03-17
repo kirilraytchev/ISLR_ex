@@ -83,7 +83,17 @@ no exercises to solve
 
 ### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#applied)
 
-[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex5) ....in progress
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex5) |
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex6) |
+[Ex.7](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex7) |
+[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex8) |
+[Ex.9](https://kirilraytchev.github.io/ISLR_ex/Ch5.html#ex9)
+
+## [Ch6 Linear Model Selection and Regularization](https://kirilraytchev.github.io/ISLR_ex/Ch6.html) 
+
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#conceptual)
+
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex1) ....in progress
 
 # Conclusion
 
