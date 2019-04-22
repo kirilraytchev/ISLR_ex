@@ -37,4 +37,301 @@ models, containing 0, 1, 2, . . . , p predictors. Explain your answers:
 *(a)* Which of the three models with k predictors has the smallest
 training RSS?
 
->**Answer:** ....in progress
+>**Answer:** Best subset. It tries all possible combinations and the one with the smallest training RSS can be selected.
+
+*(b)* Which of the three models with k predictors has the smallest
+test RSS?
+
+>**Answer:** Best subset has the highest chance of having the smallest test RSS as it has the smallest training RSS.
+
+*(c)* True or False:
+
+*i.* The predictors in the k-variable model identified by forward
+stepwise are a subset of the predictors in the (k+1)-variable
+model identified by forward stepwise selection.
+
+>**Answer:** True
+
+*ii.* The predictors in the k-variable model identified by backward
+stepwise are a subset of the predictors in the (k + 1)-
+variable model identified by backward stepwise selection.
+
+>**Answer:** True
+
+*iii.* The predictors in the k-variable model identified by backward
+stepwise are a subset of the predictors in the (k + 1)-
+variable model identified by forward stepwise selection.
+
+>**Answer:** False
+
+*iv.* The predictors in the k-variable model identified by forward
+stepwise are a subset of the predictors in the (k+1)-variable
+model identified by backward stepwise selection.
+
+>**Answer:** False
+
+*v.* The predictors in the k-variable model identified by best
+subset are a subset of the predictors in the (k + 1)-variable
+model identified by best subset selection.
+
+>**Answer:** False
+
+# *Ex.2* {#ex2}
+
+For parts (a) through (c), indicate which of i. through iv. is correct.
+Justify your answer.
+
+*(a)* The lasso, relative to least squares, is:
+
+*i.* More flexible and hence will give improved prediction accuracy
+when its increase in bias is less than its decrease in
+variance.
+
+>**Answer:** Lasso is less flexible due to the inserted $\lambda$ "noise". That helps prevent overfitting.
+
+*ii.* More flexible and hence will give improved prediction accuracy
+when its increase in variance is less than its decrease
+in bias.
+
+>**Answer:** The same as *i.*
+
+*iii.* Less flexible and hence will give improved prediction accuracy
+when its increase in bias is less than its decrease in
+variance.
+
+>**Answer:** The Lasso is better when it decreases variance more than increasing bias.
+
+*iv.* Less flexible and hence will give improved prediction accuracy
+when its increase in variance is less than its decrease
+in bias.
+
+>**Answer:** That is the opposite of *iii.*, hence not correct
+
+*(b)* Repeat *(a)* for ridge regression relative to least squares.
+
+>**Answer:** The same as *(a)*
+
+*(c)* Repeat *(a)* for non-linear methods relative to least squares.
+
+>**Answer:** Non-linear methods are more flexible and will give improved prediction accuracy when variance increases less than bias decreases, hence *ii.* in correct.
+
+# *Ex.3* {#ex3}
+
+Suppose we estimate the regression coefficients in a linear regression
+model by minimizing
+
+`r knitr::include_graphics("Ch6Ex3.jpg")`
+
+for a particular value of $s$. For parts *(a)* through *(e)*, indicate which
+of *i.* through *v.* is correct. Justify your answer.
+
+*(a)* As we increase $s$ from 0, the training RSS will:
+
+>**Answer:** Training RSS will steadily decrease, hence *iv.* is correct
+
+*(b)* Repeat *(a)* for test RSS.
+
+>**Answer:** Test RSS will decrease initially, since increase of variance will be hindered, but then eventually will start increasing, hence *ii.* is correct
+
+*(c)* Repeat *(a)* for variance.
+
+>**Answer** Variance will steadily increase, hence *iii.* is correct
+
+*(d)* Repeat *(a)* for (squared) bias.
+
+>**Answer:** Bias will steadily decrease, hence *iv.* is correct
+
+*(e)* Repeat *(a)* for the irreducible error.
+
+>**Answer:** *v.* is correct - remain constant
+
+# *Ex.4* {#ex4}
+
+Suppose we estimate the regression coefficients in a linear regression
+model by minimizing
+
+`r knitr::include_graphics("Ch6Ex4.jpg")`
+
+for a particular value of $\lambda$. For parts *(a)* through *(e)*, indicate which
+of *i.* through *v.* is correct. Justify your answer.
+
+*(a)* As we increase $\lambda$ from 0, the training RSS will:
+
+>**Answer:** Training RSS will steadily increase - *iii.*. $\beta$ values will be becoming smaller and smaller, hence train RSS will be increasing
+
+*(b)* Repeat *(a)* for test RSS.
+
+>**Answer:** *(ii.)* is correct - decrease initially, and than eventually start increasing in a U-shape. Decrease at first stage is due to the fact that overfitting is being prevented from the $\lambda$ increase. Increase at the last stage is due to the fact that too high $\lambda$ values cause the model to start deviating substantially 
+
+*(c)*  Repeat *(a)* for variance.
+
+>**Answer:** *(iv.)* is correct - steadily decrease. Increasing $\lambda$ causes the model to become less and less flexible, hence the variance decrease
+
+*(d)* Repeat *(a)* for (squared) bias.
+
+>**Answer:** *(iii.)* is correct - steadily increase. With the decrease of flexibility comes the increase of bias. 
+
+*(e)* Repeat *(a)* for the irreducible error.
+
+>**Answer:** *(v.)* is correct - remain constant. This is by definition.
+
+# *Ex.5* {#ex5}
+
+It is well-known that ridge regression tends to give similar coefficient
+values to correlated variables, whereas the lasso may give quite different
+coefficient values to correlated variables. We will now explore
+this property in a very simple setting.
+
+Suppose that $n = 2$, $p = 2$, $x_{11} = x_{12}$, $x_{21} = x_{22}$. Furthermore,
+suppose that $y_1+y_2 = 0$ and $x_{11}+x_{21} = 0$ and $x_{12}+x_{22} = 0$, so that
+the estimate for the intercept in a least squares, ridge regression, or
+lasso model is zero: $\hat\beta_0 = 0$.
+
+*(a)* Write out the ridge regression optimization problem in this setting.
+
+>**Answer:** We have to minimize the following:
+
+`r knitr::include_graphics("Ch6Ex5_a.jpg")`
+
+*(b)* Argue that in this setting, the ridge coefficient estimates satisfy $\hat\beta_1 = \hat\beta_2$
+
+>**Answer:** To find the coeff. we have to differentiate by $\beta_1$ and $\beta_2$ and solve for $0$
+
+`r knitr::include_graphics("Ch6Ex5_b.jpg")`
+
+*(c)* Write out the lasso optimization problem in this setting.
+
+*(d)* Argue that in this setting, the lasso coefficients $\hat\beta_1$ and $\hat\beta_2$ are
+not unique—in other words, there are many possible solutions
+to the optimization problem in (c). Describe these solutions.
+
+>**Answer (c)&(d):** We get $\beta_1$ dependent on $\beta_2$, so we do not have a closed solution
+
+`r knitr::include_graphics("Ch6Ex5_c_d.jpg")`
+
+# *Ex.6* {#ex6}
+
+We will now explore (6.12) and (6.13) further.
+
+*(a)* Consider (6.12) with p = 1. For some choice of $y_1$ and $\lambda > 0$,
+plot (6.12) as a function of $\beta_1$. Your plot should confirm that
+(6.12) is solved by (6.14).
+
+>**Answer:** Following is the plot and the confirmation:
+
+```{r}
+beta1 <- seq(from = 1, to = 5, by = 0.1)
+y <- 3
+lambda <- 0.5
+
+fbeta1_reg_6a <- function(beta1, y, lambda){
+        
+        fbeta1 <- (y - beta1)^2 + lambda*beta1^2
+        fbeta1
+}
+
+fbeta1 <- map_dbl(beta1, fbeta1_reg_6a, y, lambda)
+
+beta1formula_6a <- y / (1 + lambda)
+
+ggplot() +
+        geom_line(aes(y = fbeta1, x = beta1), color = "blue") + 
+        geom_hline(aes(yintercept = y), color = "red") +
+        geom_vline(aes(xintercept = beta1formula_6a), color = "green")
+```
+
+*(b)* Consider (6.13) with p = 1. For some choice of $y_1$ and $\lambda > 0$,
+plot (6.13) as a function of $\beta_1$. Your plot should confirm that
+(6.13) is solved by (6.15).
+
+>**Answer:** Following is the plot and the confirmation:
+
+```{r}
+beta1 <- seq(from = 1, to = 5, by = 0.1)
+y <- 3
+lambda <- 0.5
+
+fbeta1_reg_6b <- function(beta1, y, lambda){
+        
+        fbeta1 <- (y - beta1)^2 + lambda*beta1
+        fbeta1
+}
+
+fbeta1 <- map_dbl(beta1, fbeta1_reg_6b, y, lambda)
+
+beta1formula_6b <- y - lambda/2 ## y > lambda/2
+
+ggplot() +
+        geom_line(aes(y = fbeta1, x = beta1), color = "blue") + 
+        geom_hline(aes(yintercept = y), color = "red") +
+        geom_vline(aes(xintercept = beta1formula_6b), color = "green")
+```
+
+# *Ex.7* {#ex7}
+
+We will now derive the Bayesian connection to the lasso and ridge
+regression discussed in Section 6.2.2.
+
+*(a)* Suppose that $y_i = \beta_0 + \sum_{j=1}^px_{ij}\beta_j + \epsilon_i$ where $\epsilon_1, ...., \epsilon_n$ are independent and identically distributed from a $N(0, \sigma^2)$ distribution.
+Write out the likelihood for the data.
+
+>**Answer:** Following is the likelihood:
+
+`r knitr::include_graphics("Ch6Ex7_a.jpg")`
+
+*(b)* Assume the following prior for $\beta: \beta_1, . . . , \beta_p$ are independent
+and identically distributed according to a double-exponential distribution with mean 0 and common scale parameter b: i.e.$p(\beta) = \frac{1}{2b}exp(\frac{-\lvert\beta\rvert}{b})$. Write out the posterior for $\beta$ in this setting.
+
+>**Answer:** Following is the posterior:
+
+`r knitr::include_graphics("Ch6Ex7_b.jpg")`
+
+*(c)* Argue that the lasso estimate is the $mode$ for $\beta$ under this posterior
+distribution.
+
+>**Answer:** Following is the way to argue:
+
+`r knitr::include_graphics("Ch6Ex7_c.jpg")`
+
+*(d)* Now assume the following prior for $\beta: \beta_1,....,\beta_p$ are independent
+and identically distributed according to a normal distribution with mean zero and variance $c$. Write out the posterior for $\beta$ in this setting.
+
+>**Answer:** Following is the posterior:
+
+`r knitr::include_graphics("Ch6Ex7_d.jpg")`
+
+*(e)* Argue that the ridge regression estimate is both the mode and
+the mean for $\beta$ under this posterior distribution.
+
+>**Answer:** Following is the way to argue:
+
+`r knitr::include_graphics("Ch6Ex7_e.jpg")`
+
+***
+
+# Applied {#applied}
+
+***
+
+```{r}
+rm(list = ls())
+```
+
+# *Ex.8* {#ex8}
+
+In this exercise, we will generate simulated data, and will then use
+this data to perform best subset selection.
+
+*(a)* Use the rnorm() function to generate a predictor $X$ of length
+$n = 100$, as well as a noise vector $\epsilon$ of length $n = 100$.
+
+>**Answer** ....
+
+
+
+
+
+
+
+
+
