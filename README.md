@@ -93,7 +93,17 @@ no exercises to solve
 
 ### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#conceptual)
 
-[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex1) ....in progress
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex1) |
+[Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex2) |
+[Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex3) |
+[Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex4) |
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex5) |
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex6) |
+[Ex.7](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex7)
+
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#applied)
+
+[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex8) .... in progress
 
 # Conclusion
 
