@@ -521,7 +521,7 @@ coef(forstepsel, 3) %>% broom::tidy()
 *(e)* Now fit a lasso model to the simulated data, again using $X, X^2,..., X^10$ as predictors. Use cross-validation to select the optimal value of $\lambda$. Create plots of the cross-validation error as a function of $\lambda$. Report the resulting coefficient estimates, and discuss the
 results obtained.
 
->**Answer** First we fit a lassso model and select optimal $\lambda$, them we create plots and last we report and discuss
+>**Answer** First we fit a lasso model and select optimal $\lambda$, them we create plots and last we report and discuss
 
 * fit a lasso and select optimal $\lambda$
 
@@ -671,7 +671,7 @@ COllege_test <- testing(College_split)
 *(b)* Fit a linear model using least squares on the training set, and
 report the test error obtained.
 
->**Answer:** FOllowing is the linear fit and test error
+>**Answer:** Following is the linear fit and test error
 
 ```{r}
 linear_fit <- lm(Apps ~ ., data = College_train)
@@ -719,7 +719,7 @@ tbl_ex9 <-
 format(mse_9c, big.mark = " ")
 ```
 
-*(d)* Fit a lasso model on the training set, with λ chosen by crossvalidation.
+*(d)* Fit a lasso model on the training set, with λ chosen by cross validation.
 Report the test error obtained, along with the number
 of non-zero coefficient estimates.
 
@@ -749,11 +749,11 @@ format(mse_9d, big.mark = " ")
 coef(lasso_fit_9d)
 ```
 
-*(e)* Fit a PCR model on the training set, with M chosen by crossvalidation.
+*(e)* Fit a PCR model on the training set, with M chosen by cross validation.
 Report the test error obtained, along with the value
 of M selected by cross-validation.
 
->**Answer:** FOllowing is the PCR fit, then the value of M, and finally the test error
+>**Answer:** Following is the PCR fit, then the value of M, and finally the test error
 
 ```{r}
 set.seed(2)
@@ -767,7 +767,7 @@ summary(pcr_fit)
 validationplot(pcr_fit, val.type="MSEP")
 ```
 
-From $M = 5$ onwards RMSE decreases slightly, so we can assume a value of $6$
+From $M = 5$ onward RMSE decreases slightly, so we can assume a value of $6$
 
 * the test error
 
@@ -784,11 +784,11 @@ tbl_ex9 <-
 format(mse_9e, big.mark = " ")
 ```
 
-*(f)* Fit a PLS model on the training set, with M chosen by crossvalidation.
+*(f)* Fit a PLS model on the training set, with M chosen by cross validation.
 Report the test error obtained, along with the value
 of M selected by cross-validation.
 
->**Answer:** FOllowing is the PLS fit, then the value of M, and finally the test error
+>**Answer:** Following is the PLS fit, then the value of M, and finally the test error
 
 ```{r}
 set.seed(2)
@@ -800,7 +800,7 @@ summary(plsr_fit)
 validationplot(plsr_fit, val.type="MSEP")
 ```
 
-From $M = 5$ onwards RMSE decreases slightly, so we can assume a value of $6$
+From $M = 5$ onward RMSE decreases slightly, so we can assume a value of $6$
 
 * the test error
 
@@ -1191,7 +1191,7 @@ PCR with number of comp: #8 exhibits optimum parameters.
 
 *(b)* Propose a model (or set of models) that seem to perform well on
 this data set, and justify your answer. Make sure that you are
-evaluating model performance using validation set error, crossvalidation,
+evaluating model performance using validation set error, cross validation,
 or some other reasonable alternative, as opposed to
 using training error.
 
