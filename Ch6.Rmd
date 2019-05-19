@@ -1,9 +1,7 @@
 ---
 title: "Ch6 Linear Model Selection and Regularization"
 author: "Kiril Raytchev"
-output: 
-  html_document: 
-    keep_md: yes
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +18,12 @@ library(grid)
 library(scales)
 library(cowplot)
 library(rlang)
+library(leaps)
+library(glmnet)
+library(useful)
+library(pls)
+
+source("kRfunlib.R")
 ```
 
 ***
@@ -313,25 +317,938 @@ the mean for $\beta$ under this posterior distribution.
 
 ***
 
-```{r}
-rm(list = ls())
-```
-
 # *Ex.8* {#ex8}
 
 In this exercise, we will generate simulated data, and will then use
 this data to perform best subset selection.
 
-*(a)* Use the rnorm() function to generate a predictor $X$ of length
+*(a)* Use the `rnorm()` function to generate a predictor $X$ of length
 $n = 100$, as well as a noise vector $\epsilon$ of length $n = 100$.
 
->**Answer** ....
+>**Answer** Following are the vectors:
+
+```{r}
+set.seed(123) 
+x <- rnorm(100)
+set.seed(321)
+eps <- rnorm(100)
+```
+
+*(b)* Generate a response vector $Y$ of length $n = 100$ according to
+the model 
+
+$Y = \beta_0 + \beta_1X + \beta_2X^2 + \beta_3X^3 + \epsilon$
+
+where $\beta_0, \beta_1, \beta_2, \beta_3$ are constants of your choice.
+
+>**Answer:** Following is the response vector:
+
+```{r}
+beta_0 <- 0.5
+beta_1 <- 3
+beta_2 <- 1.2
+beta_3 <- -0.123
+
+y <- beta_0 + beta_1*x + beta_2*x^2 + beta_3*x^3 + eps
+
+tbl_data <- tibble(
+  x,
+  y
+)
+
+tbl_data
+```
+
+*(c)* Use the `regsubsets()` function to perform best subset selection
+in order to choose the best model containing the predictors
+$X, X^2,...., X^{10}$.
+
+What is the best model obtained according to
+$C_p$, $BIC$, and adjusted $R^2$?
+
+Show some plots to provide evidence
+for your answer, and report the coefficients of the best model obtained.
+
+*Note* you will need to use the `data.frame()` function to
+create a single data set containing both $X$ and $Y$.
+
+>**Answer:** We start with performing best subset selection, next we select the best model obtained  
+
+* performing best subset selection
+
+```{r}
+n <- 10
+mod_form <- as.formula(y ~ poly(x, n, raw = T))
+
+bestsel <- regsubsets(mod_form, tbl_data, nvmax = 10)
+
+tbestsel <- tidy.regsubsets(bestsel) %>%
+  mutate(model.number = 1:n()) %>%
+  select(model.number, everything())
+
+tbestsel
+```
+
+* selecting the best model
+
+```{r}
+gg.adj.r <- ggplot(data = tbestsel, aes(y = adj.r.squared, x = model.number)) + 
+  geom_point(color = "red", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbestsel))) +
+  xlab("model number")
+
+gg.cp <- ggplot(data = tbestsel, aes(y = mallows_cp, x = model.number)) + 
+  geom_point(color = "blue", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbestsel))) +
+  xlab("model number")
+
+gg.bic <- ggplot(data = tbestsel, aes(y = BIC, x = model.number)) + 
+  geom_point(color = "green", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbestsel))) +
+  xlab("model number")
 
 
+grid.arrange(gg.adj.r, gg.cp, gg.bic, ncol = 1)
+```
+
+Model #2 exhibits most optimum characteristics.
+
+* the coefficients of the best model obtained are:
+
+```{r message=FALSE, warning=FALSE}
+coef(bestsel, 2) %>% broom::tidy()
+```
 
 
+*(d)* Repeat *(c)*, using forward stepwise selection and also using backwards
+stepwise selection. How does your answer compare to the
+results in *(c)*?
+
+>**Answer:** First we do forward and then backwards.
+
+* forward stepwise selection
+
+```{r}
+forstepsel <- 
+  regsubsets(mod_form, tbl_data, nvmax = 19, method = "forward")
+  
+tforstepsel <-  
+  forstepsel %>%
+  tidy %>%
+  mutate(model.number = 1:n()) %>%
+  select(model.number, everything())
+
+tforstepsel
+```
+
+```{r}
+gg.adj.r <- ggplot(data = tforstepsel, aes(y = adj.r.squared, x = model.number)) + 
+  geom_point(color = "red", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tforstepsel))) +
+  xlab("model number")
+
+gg.cp <- ggplot(data = tforstepsel, aes(y = mallows_cp, x = model.number)) + 
+  geom_point(color = "blue", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tforstepsel))) +
+  xlab("model number")
+
+gg.bic <- ggplot(data = tforstepsel, aes(y = BIC, x = model.number)) + 
+  geom_point(color = "green", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tforstepsel))) +
+  xlab("model number")
 
 
+grid.arrange(gg.adj.r, gg.cp, gg.bic, ncol = 1)
+```
+
+`Model #2` exhibits most optimum characteristics and is the same choice as from best subset method
+
+```{r message=FALSE, warning=FALSE}
+coef(forstepsel, 2) %>% broom::tidy()
+```
+
+* backwards stepwise selection
+
+```{r}
+backstepsel <- 
+  regsubsets(mod_form, tbl_data, nvmax = 19, method = "backward")
+  
+tbackstepsel <-  
+  backstepsel %>%
+  tidy %>%
+  mutate(model.number = 1:n()) %>%
+  select(model.number, everything())
+
+tbackstepsel
+```
+
+```{r}
+gg.adj.r <- ggplot(data = tbackstepsel, aes(y = adj.r.squared, x = model.number)) + 
+  geom_point(color = "red", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbackstepsel))) +
+  xlab("model number")
+
+gg.cp <- ggplot(data = tbackstepsel, aes(y = mallows_cp, x = model.number)) + 
+  geom_point(color = "blue", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbackstepsel))) +
+  xlab("model number")
+
+gg.bic <- ggplot(data = tbackstepsel, aes(y = BIC, x = model.number)) + 
+  geom_point(color = "green", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbackstepsel))) +
+  xlab("model number")
 
 
+grid.arrange(gg.adj.r, gg.cp, gg.bic, ncol = 1)
 
+```
+
+Model #3 exhibits most optimum characteristics with this method
+
+```{r message=FALSE, warning=FALSE}
+coef(forstepsel, 3) %>% broom::tidy()
+```
+
+*(e)* Now fit a lasso model to the simulated data, again using $X, X^2,..., X^10$ as predictors. Use cross-validation to select the optimal value of $\lambda$. Create plots of the cross-validation error as a function of $\lambda$. Report the resulting coefficient estimates, and discuss the
+results obtained.
+
+>**Answer** First we fit a lassso model and select optimal $\lambda$, them we create plots and last we report and discuss
+
+* fit a lasso and select optimal $\lambda$
+
+```{r}
+# Find the best lambda using cross-validation
+x <- model.matrix(mod_form, tbl_data)[,-1]
+y <- tbl_data$y
+
+cv <- cv.glmnet(x, y, alpha = 0)
+# Display the best lambda value
+cv$lambda.min
+```
+
+* cv error = f($\lambda$)
+
+```{r}
+plot(cv)
+```
+
+* the resulting coef. estimates
+
+```{r message=FALSE, warning=FALSE}
+# Fit the final model on the training data
+model <- glmnet(x, y, alpha = 1, lambda = cv$lambda.min)
+
+# Dsiplay regression coefficients
+coef(model) %>% tidy
+```
+
+
+So, we have non-zero coef. for $X$ and $X^2$.
+
+*(f)* Now generate a response vector $Y$ according to the model
+
+$Y = \beta_0 + \beta_7X^7 + \epsilon$
+
+and perform best subset selection and the lasso. Discuss the
+results obtained.
+
+>**Answer:** First we generate, then we perform best subset, after that we perform the lasso and lastly we discuss the results obtained.
+
+* generating $Y$
+
+```{r}
+set.seed(123) 
+x <- rnorm(100)
+set.seed(321) 
+eps <- rnorm(100)
+
+beta_0 <- 0.123
+beta_7 <- 1.4
+
+y <- beta_0 + beta_7*x^7 + eps
+
+tbl_data <- tibble(
+  x,
+  y
+)
+
+tbl_data
+```
+
+* best subset
+
+```{r}
+n <- 10
+mod_form <- 
+  as.formula(y ~ poly(x, n, raw = T))
+
+bestsel <- 
+  regsubsets(mod_form, tbl_data)
+
+tbestsel <- 
+  tidy.regsubsets(bestsel) %>%
+  mutate(model.number = 1:n()) %>%
+  select(model.number, everything())
+
+tbestsel
+```
+
+```{r message=FALSE, warning=FALSE}
+gg.adj.r <- ggplot(data = tbestsel, aes(y = adj.r.squared, x = model.number)) + 
+  geom_point(color = "red", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbestsel))) +
+  xlab("model number")
+
+gg.cp <- ggplot(data = tbestsel, aes(y = mallows_cp, x = model.number)) + 
+  geom_point(color = "blue", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbestsel))) +
+  xlab("model number")
+
+gg.bic <- ggplot(data = tbestsel, aes(y = BIC, x = model.number)) + 
+  geom_point(color = "green", size = 3) +
+  geom_line() +
+  scale_x_discrete(limits = c(1:nrow(tbestsel))) +
+  xlab("model number")
+
+
+grid.arrange(gg.adj.r, gg.cp, gg.bic, ncol = 1)
+```
+
+We observe that `model.number #2` exhibits highest adj. $R^2$ and lowest $C_p$, though $BIC$ is not the min.
+
+```{r message=FALSE, warning=FALSE}
+coef(bestsel, 2) %>% tidy()
+```
+
+
+* lasso
+
+```{r message=FALSE, warning=FALSE}
+# Find the best lambda using cross-validation
+x <- model.matrix(mod_form, tbl_data)[,-1]
+y <- tbl_data$y
+
+cv <- cv.glmnet(x, y, alpha = 0)
+# Display the best lambda value
+#cv$lambda.min
+
+# Fit the final model on the training data
+model <- glmnet(x, y, alpha = 1, lambda = cv$lambda.min)
+
+# Dsiplay regression coefficients
+coef(model) %>% tidy()
+```
+
+* Conclusion: lasso zero-ed feature $X^3$ otherwise present in best subset.
+
+# *Ex.9* {#ex9}
+
+In this exercise, we will predict the number of applications received
+using the other variables in the `College` data set.
+
+*(a)* Split the data set into a training set and a test set.
+
+>**Answer:** Following is the split
+
+```{r}
+set.seed(123)
+College_split <- initial_split(College)
+College_train <- training(College_split)
+COllege_test <- testing(College_split)
+```
+
+*(b)* Fit a linear model using least squares on the training set, and
+report the test error obtained.
+
+>**Answer:** FOllowing is the linear fit and test error
+
+```{r}
+linear_fit <- lm(Apps ~ ., data = College_train)
+COllege_augm <- broom::augment(linear_fit, newdata = COllege_test)
+mse <- mean((COllege_augm$Apps - COllege_augm$.fitted)^2)
+
+tbl_ex9 <- tibble(
+  model = as_factor("linear"),
+  mse = mse
+)
+
+format(mse, big.mark = " ")
+```
+
+*(c)* Fit a ridge regression model on the training set, with λ chosen
+by cross-validation. Report the test error obtained.
+
+>**Answer:** Following is the ridge regression fit and the test error
+
+```{r}
+set.seed(1)
+
+mod_form_9c <- 
+  as.formula(Apps ~ .)
+
+x_train <- model.matrix(mod_form_9c, College_train)[,-1]
+x_test <- model.matrix(mod_form_9c, COllege_test)[,-1]
+y_train <- College_train$Apps
+y_test <- COllege_test$Apps
+
+cv.out_9c =cv.glmnet (x_train, y_train, alpha =0)
+bestlam_9c =cv.out_9c$lambda.min
+
+ridge_fit_9c <- glmnet(x_train, y_train, alpha = 0, lambda = bestlam_9c)
+
+ridge_pred=predict(ridge_fit_9c, s = bestlam_9c, newx = x_train)
+mse_9c <- mean(( ridge_pred - y_train)^2)
+
+tbl_ex9 <- 
+  tbl_ex9 %>% add_row(
+  model = as_factor("ridge"),
+  mse = mse_9c
+)
+
+format(mse_9c, big.mark = " ")
+```
+
+*(d)* Fit a lasso model on the training set, with λ chosen by crossvalidation.
+Report the test error obtained, along with the number
+of non-zero coefficient estimates.
+
+>**Answer:** Following is the ridge regression fit, the test error and the number of non-zero coef
+
+```{r}
+cv.out_9d =cv.glmnet (x_train, y_train, alpha =1)
+bestlam_9d =cv.out_9d$lambda.min
+
+lasso_fit_9d <- glmnet(x_train, y_train, alpha = 1, lambda = bestlam_9d)
+
+lasso_pred=predict(lasso_fit_9d, s = bestlam_9d, newx = x_train)
+mse_9d <- mean(( lasso_pred - y_train)^2)
+
+tbl_ex9 <- 
+  tbl_ex9 %>% add_row(
+  model = as_factor("lasso"),
+  mse = mse_9d
+)
+
+format(mse_9d, big.mark = " ")
+```
+
+* coef are
+
+```{r message=FALSE, warning=FALSE}
+coef(lasso_fit_9d)
+```
+
+*(e)* Fit a PCR model on the training set, with M chosen by crossvalidation.
+Report the test error obtained, along with the value
+of M selected by cross-validation.
+
+>**Answer:** FOllowing is the PCR fit, then the value of M, and finally the test error
+
+```{r}
+set.seed(2)
+pcr_fit <- pcr(mod_form_9c, data = College_train, scale=TRUE, validation ="CV")
+summary(pcr_fit)
+```
+
+* the value of M
+
+```{r}
+validationplot(pcr_fit, val.type="MSEP")
+```
+
+From $M = 5$ onwards RMSE decreases slightly, so we can assume a value of $6$
+
+* the test error
+
+```{r}
+pcr_pred <- predict(pcr_fit, COllege_test, ncomp = 6)
+mse_9e <- mean((pcr_pred - y_test)^2)
+
+tbl_ex9 <- 
+  tbl_ex9 %>% add_row(
+  model = as_factor("pcr"),
+  mse = mse_9e
+)
+
+format(mse_9e, big.mark = " ")
+```
+
+*(f)* Fit a PLS model on the training set, with M chosen by crossvalidation.
+Report the test error obtained, along with the value
+of M selected by cross-validation.
+
+>**Answer:** FOllowing is the PLS fit, then the value of M, and finally the test error
+
+```{r}
+set.seed(2)
+plsr_fit <- plsr(mod_form_9c, data = College_train, scale=TRUE, validation ="CV")
+summary(plsr_fit)
+```
+
+```{r}
+validationplot(plsr_fit, val.type="MSEP")
+```
+
+From $M = 5$ onwards RMSE decreases slightly, so we can assume a value of $6$
+
+* the test error
+
+```{r}
+plsr_pred <- predict(plsr_fit, COllege_test, ncomp = 6)
+mse_9f <- mean((plsr_pred - y_test)^2)
+
+tbl_ex9 <- 
+  tbl_ex9 %>% add_row(
+  model = as_factor("pls"),
+  mse = mse_9f
+)
+
+format(mse_9f, big.mark = " ")
+```
+
+*(g)* Comment on the results obtained. How accurately can we predict
+the number of college applications received? Is there much
+difference among the test errors resulting from these five approaches?
+
+>**Answer:** Following is the comparison
+
+```{r}
+ggplot(data = tbl_ex9) +
+  geom_line(aes(x = reorder(model, mse), y = mse, group = 1)) +
+  geom_point(aes(x = reorder(model, mse), y = mse, shape = model, color = model), size = 3) +
+  xlab("model")
+```
+
+Lasso model exhibits the lowest mse and PCR the highest.
+
+# *Ex.10* {#ex10}
+
+We have seen that as the number of features used in a model increases,
+the training error will necessarily decrease, but the test error may not.
+We will now explore this in a simulated data set.
+
+*(a)* Generate a data set with $p = 20$ features, $n = 1,000$ observations,
+and an associated quantitative response vector generated
+according to the model
+
+$Y = X\beta + \epsilon$
+
+where $\beta$ has some elements that are exactly equal to zero.
+
+>**Answer:** Following is the generation of the data set
+
+```{r}
+set.seed(123)
+features_10a <- 20
+obs_10a <- 1000
+
+eps_10a <- rnorm(obs_10a)
+x_seeds_10a <- rnorm(features_10a)
+
+betas_10a <- rnorm(features_10a)
+betas_10a[1] <- 0
+betas_10a[5] <- 0
+betas_10a[10] <- 0
+betas_10a[15] <- 0
+betas_10a[20] <- 0
+
+generate_x_10a <- function(seed, nobs){
+  rnorm(n = nobs, mean = seed)
+}
+
+generate_y_10a <- function(V1, V2, V3, V4, V5, V6, V7, V8, V9, V10, V11, V12, V13, V14, V15, V16, V17, V18, V19, V20, eps_10a, betas_10a){
+  y <- V1*betas_10a[1] + V2*betas_10a[2] + V3*betas_10a[3] + V4*betas_10a[4] + V5*betas_10a[5] + V6*betas_10a[6] + V7*betas_10a[7] + V8*betas_10a[8] + V9*betas_10a[9] + V10*betas_10a[10] + V11*betas_10a[11] + V12*betas_10a[12] + V13*betas_10a[13] + V14*betas_10a[14] + V15*betas_10a[15] + V16*betas_10a[16] + V17*betas_10a[17]+ V18*betas_10a[18] + V19*betas_10a[19] + V20*betas_10a[20] + eps_10a
+}
+
+tbl_10a <- 
+  map_dfc(x_seeds_10a, generate_x_10a, obs_10a) %>%
+  add_column(eps_10a)
+
+ls_10a <- map(tbl_10a, list)
+
+y_10a <- pmap(ls_10a, generate_y_10a, betas_10a)
+
+tbl_10a <- tbl_10a %>%
+  add_column(y_10a = y_10a[[1]]) %>%
+  select(y_10a, everything())
+
+head(tbl_10a)
+```
+
+*(b)* Split your data set into a training set containing 100 observations
+and a test set containing 900 observations.
+
+>**Answer:** Following is the split
+
+```{r}
+set.seed(123)
+data_split_10b <- initial_split(tbl_10a %>% select(-eps_10a), prop = 1/10)
+data_split_10b_train <- training(data_split_10b)
+data_split_10b_test <- testing(data_split_10b)
+head(data_split_10b_train)
+```
+
+*(c)* Perform best subset selection on the training set, and plot the
+training set MSE associated with the best model of each size.
+
+>**Answer:** Following is the subset selection, then the plot
+
+* best subset selection
+
+```{r}
+mod_form_10c <- as.formula(y_10a ~ .)
+
+bestsel_10c <- regsubsets(mod_form_10c, data_split_10b_train, nvmax = 20)
+
+tbestsel_10c <- tidy.regsubsets(bestsel_10c) %>%
+  mutate(var.number = 1:n()) %>%
+  select(var.number, everything())
+
+tbestsel_10c
+```
+
+* plot the training MSE
+
+```{r}
+predict.regsubsets = function(id, object, formula, newdata, ...){
+  form = as.formula(formula)
+  mat = model.matrix(form, newdata)
+  coefi = coef(object, id=id)
+  xvars = names(coefi)
+  mat[ , xvars] %*% coefi
+}
+
+y_pred_10c <- 
+  map_dfc(tbestsel_10c$var.number, 
+          predict.regsubsets, 
+          object = bestsel_10c, formula = mod_form_10c, newdata = data_split_10b_train)
+
+mse.calculate <- function(y_pred, y_data){
+  mean((as.vector(y_pred) - y_data)^2)
+}
+
+mse.error <- 
+  map_dbl(y_pred_10c, 
+          mse.calculate, 
+          y_data = data_split_10b_train %>% select(y_10a) %>% pull())
+
+tbestsel_10c_1 <-
+bind_cols(
+  tbestsel_10c,
+  mse = mse.error
+)
+
+
+ggplot(data = tbestsel_10c_1) +
+  geom_line(aes(x = var.number, y = mse, group = 1)) +
+  geom_point(aes(x = var.number, y = mse), size = 3) +
+  xlab("var.number")
+```
+
+*(d)* Plot the test set MSE associated with the best model of each
+size.
+
+>**Answer:** Following is the test MSE
+
+```{r}
+y_pred_10d <- 
+  map_dfc(tbestsel_10c$var.number, 
+          predict.regsubsets, 
+          object = bestsel_10c, formula = mod_form_10c, newdata = data_split_10b_test)
+
+mse.error_10d <- 
+  map_dbl(y_pred_10d, 
+          mse.calculate, 
+          y_data = data_split_10b_test %>% select(y_10a) %>% pull())
+
+tbestsel_10d <-
+bind_cols(
+  tbestsel_10c,
+  mse = mse.error_10d
+)
+
+
+ggplot(data = tbestsel_10d) +
+  geom_line(aes(x = var.number, y = mse, group = 1)) +
+  geom_point(aes(x = var.number, y = mse), size = 3) +
+  xlab("var.number")
+```
+
+*(e)* For which model size does the test set MSE take on its minimum
+value? Comment on your results. If it takes on its minimum value
+for a model containing only an intercept or a model containing
+all of the features, then play around with the way that you are
+generating the data in (a) until you come up with a scenario in
+which the test set MSE is minimized for an intermediate model
+size.
+
+>**Answer:** Following is the model with the min test MSE
+
+```{r}
+tbestsel_10d %>%
+  arrange(mse.error_10d) %>%
+  head(1)
+```
+
+*(f)* How does the model at which the test set MSE is minimized
+compare to the true model used to generate the data? Comment
+on the coefficient values.
+
+>**Answer:** Following are the coef, then the comparison with the estimates
+
+* coef
+
+```{r}
+coef_10a <- 
+  coef(bestsel_10c, id = 13) %>% 
+  enframe() %>%
+  rename(estimates_13 = value)
+
+coef_10a
+```
+
+* comparison between real betas and estimates of the best model
+
+```{r}
+betas_10f <-
+  betas_10a %>% 
+  enframe %>% 
+  mutate(name = str_c("V", name)) %>% 
+  rename(!!str_c("betas_", nrow(.)) := value) 
+
+betas_10f %>%
+  left_join(coef_10a, by = "name") %>%
+  mutate(estimates_13 = if_else(is.na(estimates_13), 0, estimates_13))
+
+```
+
+The model has "zero-ed" an additional coef - $\beta_6$
+
+*(g)* Create a plot displaying $\sqrt{\sum_{j=1}^p(\beta_j - \hat{\beta}_j^r)^2}$ for a range of values of $r$, where $\hat\beta_j^r$ is the $j^{th}$ coefficient estimate for the best model containing $r$ coefficients. Comment on what you observe. How does this compare to the test MSE plot from (d)?
+
+>**Answer:** First we data wrangle to create all betas and estimates, then we calculate and finally we plot
+
+* data wrangle
+
+```{r}
+get_coef_10g <- function(idx, obj){
+
+  coef(object = obj, id = idx) %>%
+    enframe %>%
+    right_join(betas_10f %>% select(name), by = "name") %>%
+    mutate(!!str_c("estimates_", idx) := if_else(is.na(value), 0, value)) %>%
+    select(-name, -value)
+}
+
+estimates_10g <- 
+  tbestsel_10c$var.number %>%
+  map_dfc(get_coef_10g, bestsel_10c)
+
+betas_estimates_10g <-
+  estimates_10g %>%
+  bind_cols(betas_10f) %>%
+  select(name, betas_20, everything())
+
+betas_estimates_10g
+
+```
+
+* calculate and plot
+
+```{r}
+sqdiff <- function(est, beta){
+  sum((beta - est)^2)
+}
+
+map_dfc(betas_estimates_10g %>% select(-name, -betas_20),
+        sqdiff,
+        betas_estimates_10g %>% select(betas_20)
+) %>%
+  gather("estimates_1":"estimates_20", key = "coef", value = "diff") %>%
+  mutate(coef = as_factor(coef)) %>%
+  ggplot() +
+  geom_point(aes(x = coef, y = diff), size = 3) +
+  geom_line(aes(x = coef, y = diff, group = 1)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+```
+
+Both plots seem quite the same
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```
+
+
+# *Ex.11* {#ex11}
+
+We will now try to predict per capita crime rate in the `Boston` data
+set.
+
+*(a)* Try out some of the regression methods explored in this chapter,
+such as best subset selection, the lasso, ridge regression, and
+PCR. Present and discuss results for the approaches that you
+consider.
+
+>**Answer:** Following are the methods
+
+* `Boston` data look and feel
+
+```{r}
+str(Boston)
+```
+
+* split the data
+
+```{r}
+set.seed(123)
+Boston_split <- initial_split(Boston)
+Boston_train <- training(Boston_split)
+Boston_test <- testing(Boston_split)
+```
+
+
+* best subset
+
+```{r}
+mod_form <- 
+  as.formula(crim ~ .)
+
+bestsel <- 
+  regsubsets(mod_form, Boston_train, nvmax = 20)
+
+tbestsel <- 
+  tidy.regsubsets(bestsel) %>%
+  mutate(model.number = 1:n()) %>%
+  select(model.number, everything())
+
+tbestsel
+```
+
+```{r}
+graph.bestsubset(tbestsel)
+```
+
+Model #7 exhibits optimum parameters - max $R^2$, low $RSS, C_p$ and not bad $BIC$
+
+* the lasso
+
+```{r}
+set.seed(123)
+# Find the best lambda using cross-validation
+x <- model.matrix(mod_form, Boston_train)[,-1]
+y <- Boston_train$crim
+
+cv <- cv.glmnet(x, y, alpha = 0)
+# Display the best lambda value
+# cv$lambda.min
+
+# Fit the final model on the training data
+lasso_fit <- glmnet(x, y, alpha = 1, lambda = cv$lambda.min)
+
+# Dsiplay regression coefficients
+coef(lasso_fit) #%>% tidy()
+```
+
+* ridge regression
+
+```{r}
+set.seed(123)
+cv_out <- cv.glmnet (x, y, alpha = 0)
+ridge_best_lam =cv_out$lambda.min
+
+ridge_fit <- glmnet(x, y, alpha = 0, lambda = ridge_best_lam)
+
+coef(ridge_fit)
+```
+
+* PCR fit
+
+```{r}
+set.seed(123)
+pcr_fit <- pcr(mod_form, data = Boston_train, scale=TRUE, validation ="CV")
+summary(pcr_fit)
+```
+
+```{r}
+validationplot(pcr_fit, val.type="MSEP")
+```
+
+PCR with number of comp: #8 exhibits optimum parameters.
+
+*(b)* Propose a model (or set of models) that seem to perform well on
+this data set, and justify your answer. Make sure that you are
+evaluating model performance using validation set error, crossvalidation,
+or some other reasonable alternative, as opposed to
+using training error.
+
+* best subset test error
+
+```{r warning=FALSE}
+mse.bestsubset(tbestsel, mod_fit = bestsel, mod_form, data_in = Boston_test, "crim")$graph
+```
+
+```{r warning=FALSE}
+mse.bestsubset(tbestsel, bestsel, mod_form, Boston_test, "crim")$tbl %>%
+  select(model.number, mse) %>%
+  filter(model.number == 6) %>%
+  pull(mse)
+```
+
+Model #6 exhibits optimum test error
+
+* lasso test error
+
+```{r}
+x_test <- model.matrix(mod_form, Boston_test)[,-1]
+y_test <- Boston_test$crim
+
+lasso_pred <- predict(lasso_fit, s = cv$lambda.min, newx = x_test)
+lasso_mse <- mean((lasso_pred - y_test)^2)
+
+lasso_mse
+```
+
+* ridge test error
+
+```{r}
+ridge_pred <- predict(ridge_fit, s = ridge_best_lam, newx = x_test)
+ridge_mse <- mean(( ridge_pred - y_test)^2)
+
+ridge_mse
+```
+
+* PCR test error
+
+```{r}
+pcr_pred <- predict(pcr_fit, Boston_test, ncomp = 8)
+pcr_mse <- mean((pcr_pred - Boston_test$crim)^2)
+
+pcr_mse
+```
+
+*(c)* Does your chosen model involve all of the features in the data
+set? Why or why not?
+
+>**Answer:** PCR with $ncomp = 8$ exhibits the lowest mse test error.
+
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```

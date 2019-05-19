@@ -1,0 +1,44 @@
+---
+title: "Ch7 Moving Beyond Linearity "
+author: "Kiril Raytchev"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ISLR)
+library(MASS)
+library(tidymodels)
+library(recipes)
+library(tidyverse)
+library(forcats)
+library(GGally)
+library(gridExtra)
+library(grid)
+library(scales)
+library(cowplot)
+library(rlang)
+library(leaps)
+library(glmnet)
+library(useful)
+library(pls)
+
+source("kRfunlib.R")
+```
+
+***
+
+# Conceptual {#conceptual}
+
+***
+
+# *Ex.1* {#ex1} 
+
+.... in progress
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```

@@ -103,7 +103,16 @@ no exercises to solve
 
 ### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#applied)
 
-[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex8) .... in progress
+[Ex.8](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex8) |
+[Ex.9](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex9) |
+[Ex.10](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex10) |
+[Ex.11](https://kirilraytchev.github.io/ISLR_ex/Ch6.html#ex11) 
+
+## [Ch7 Moving Beyond Linearity](https://kirilraytchev.github.io/ISLR_ex/Ch7.html) 
+
+### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#conceptual)
+
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex1) .... in progress
 
 # Conclusion
 
