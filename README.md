@@ -116,7 +116,7 @@ no exercises to solve
 [Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex2) |
 [Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex3) |
 [Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex4) |
-[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex5) |
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex5) 
 
 ### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#applied)
 
