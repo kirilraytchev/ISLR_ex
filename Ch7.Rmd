@@ -34,7 +34,182 @@ source("kRfunlib.R")
 
 # *Ex.1* {#ex1} 
 
-.... in progress
+It was mentioned in the chapter that a cubic regression spline with
+one knot at $\xi$ can be obtained using a basis of the form $x, x^2, x^3, (x − \xi)_+^3$,
+where $(x − \xi)_+^3 = (x − \xi)^3$ if $x > \xi$ and equals 0 otherwise.
+
+We will now show that a function of the form
+
+$f(x) = \beta_0 + \beta_1x + \beta_2x^2 + \beta_3x^3 + \beta_4(x − \xi)_+^3$
+
+is indeed a cubic regression spline, regardless of the values of $\beta_0, \beta_1, \beta_2,\beta_3, \beta_4$.
+
+*(a)* Find a cubic polynomial
+
+$f_1(x) = a_1 + b_1x + c_1x^2 + d_1x^3$
+
+such that $f(x) = f_1(x)$ for all $x \le \xi$. Express $a_1, b_1, c_1, d_1$ in terms of 
+$\beta_0, \beta_1, \beta_2,\beta_3, \beta_4$.
+
+*(b)* Find a cubic polynomial
+
+$f_2(x) = a_2 + b_2x + c_2x^2 + d_2x^3$
+
+such that $f(x) = f_2(x)$ for all $x > \xi$. Express $a_2, b_2, c_2, d_2$ in terms of 
+$\beta_0, \beta_1, \beta_2,\beta_3, \beta_4$. We have now established that $f(x)$ is
+a piecewise polynomial.
+
+>**Answer:** (a) and (b) follows in the picture:
+
+`r knitr::include_graphics("Ch7Ex1_ab.jpg")`
+
+*(c)* Show that $f_1(\xi) = f_2(\xi)$. That is, $f(x)$ is continuous at $\xi$.
+
+*(d)* Show that $f_1'(\xi) = f_2'(\xi)$. That is, $f'(x)$ is continuous at $\xi$.
+
+*(e)* Show that $f_1''(\xi) = f_2''(\xi)$. That is, $f''(x)$ is continuous at $\xi$.
+
+>**Answer:** (c), (d) and (e) follows in the picture:
+
+`r knitr::include_graphics("Ch7Ex1_cde.jpg")`
+
+# *Ex.2* {#ex2}
+
+Suppose that a curve $\hat{g}$ is computed to smoothly fit a set of $n$ points
+using the following formula:
+
+`r knitr::include_graphics("Ch7Ex2_1.jpg")`
+
+where $g^{(m)}$ represents the $m$th derivative of $g$ (and $g^{(0)} = g$). Provide
+example sketches of $\hat{g}$ in each of the following scenarios.
+
+*(a)* $\lambda = \infty$, $m = 0$
+*(a)* $\lambda = \infty$, $m = 1$
+*(a)* $\lambda = \infty$, $m = 2$
+*(a)* $\lambda = \infty$, $m = 3$
+*(a)* $\lambda = 0$, $m = 3$
+
+>**Answer:** Following are the answers 
+
+`r knitr::include_graphics("Ch7Ex2_2.jpg")`
+
+... the and sketches:
+
+`r knitr::include_graphics("Ch7Ex2_3.jpg")`
+
+# *Ex.3* {#ex3}
+
+Suppose we fit a curve with basis functions $b_1(X) = X, b_2(X) = (X − 1)^2I(X \ge 1)$. 
+(Note that $I(X \ge 1)$ equals $1$ for $X \ge 1$ and $0$ otherwise.) 
+We fit the linear regression model
+
+$Y = \beta_0 + \beta_1b_1(X) + \beta_2b_2(X) + \epsilon$,
+
+and obtain coefficient estimates $\hat\beta_0 = 1, \hat\beta_1 = 1, \hat\beta_2 = −2$.
+Sketch the estimated curve between $X = −2$ and $X = 2$. Note the intercepts,
+slopes, and other relevant information.
+
+>**Answer:** The graph shows that the curve is linear in [-2, 1] and quadratic in [1, 2]
+
+```{r}
+x <- seq(-5, 5, by = 0.1)
+y <- 1 + x - 2 * (x - 1)^2 * if_else(x >= 1, 1, 0)
+
+tbl <- tibble(
+        x = x,
+        y = y
+) %>%
+        mutate(x_seg = if_else(x <= 2 & x >= -2, x, 0),
+               y_seg = 1 + x_seg - 2 * (x_seg - 1)^2 * if_else(x_seg >= 1, 1, 0)
+        )
+
+ggplot(tbl) + 
+        geom_line(aes(x = x, y = y)) + 
+        geom_line(aes(x = x_seg, y = y_seg), color = "green", size = 2) +
+        geom_vline(xintercept = 1, color = "red") + 
+        geom_vline(xintercept = -2, color = "green") + 
+        geom_vline(xintercept = 2, color = "green")
+```
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```
+
+# *Ex.4* {#ex4}
+
+Suppose we fit a curve with basis functions 
+$b_1(X) = I(0 ≤ X ≤ 2) − (X − 1)I(1 ≤ X ≤ 2)$,
+$b_2(X) = (X − 3)I(3 ≤ X ≤ 4) + I(4 < X ≤ 5)$.
+
+We fit the linear regression model
+
+$Y = β_0 + β_1b_1(X) + β_2b_2(X) + \epsilon$,
+
+and obtain coefficient estimates $\hat\beta_0 = 1, \hat\beta_1 = 1, \hat\beta_2 = 3$.
+
+Sketch the estimated curve between $X = −2$ and $X = 2$. 
+Note the intercepts, slopes, and other relevant information.
+
+>**Answer:** The graph shows that the curve is constant in [-2, 0] and [0, 1], and linear in [1, 2]
+
+```{r}
+x <- seq(-2, 2, by = 0.1)
+y <- 1 + 
+        1 * if_else((x >= 0 & x <=2), 1, 0) - (x - 1) * if_else((x >= 1 & x <= 2), 1, 0) +
+        3 * (x - 3) * if_else((x >= 4 & x <= 4), 1, 0) + if_else((x > 4 & x <= 5), 1, 0)
+
+tbl <- tibble(
+        x = x,
+        y = y
+)
+
+ggplot(tbl) +
+        geom_point(aes(x = x, y = y), color = "green") +
+        geom_vline(xintercept = 0, color = "red") + 
+        geom_vline(xintercept = 1, color = "red")
+```
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```
+
+# *Ex.5* {#ex5}
+
+Consider two curves, $\hat{g_1}$ and $\hat{g_2}$, defined by
+
+`r knitr::include_graphics("Ch7Ex5.jpg")`
+
+where $g^{(m)}$ represents the m$th$ derivative of g.
+
+*(a)* As $\lambda \rightarrow \infty$, will $\hat{g_1}$ and $\hat{g_2}$ have the smaller training RSS?
+
+>**Answer:** $\hat{g_2}$ has the smaller training RSS, being more flexible in going through the training ponts.
+
+*(b)* As $\lambda \rightarrow \infty$, will $\hat{g_1}$ and $\hat{g_2}$ have the smaller test RSS?
+
+>**Answer:** $\hat{g_1}$ would have lower variance, being less flexible
+
+*(c)* For $\lambda = 0$, will $\hat{g_1}$ and $\hat{g_2}$ have the smaller training and test RSS?
+
+>**Answer:** They would be the same as the penalty term drops out
+
+***
+
+# Applied {#applied}
+
+***
+
+# *Ex.6* {#ex6}
+
+....
+
+
 
 ```{r}
 #clean up and load again kr funcs

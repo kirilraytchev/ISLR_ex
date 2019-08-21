@@ -112,7 +112,15 @@ no exercises to solve
 
 ### [Conceptual](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#conceptual)
 
-[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex1) .... in progress
+[Ex.1](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex1) |
+[Ex.2](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex2) |
+[Ex.3](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex3) |
+[Ex.4](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex4) |
+[Ex.5](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex5) |
+
+### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#applied)
+
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex6) .... in progress
 
 # Conclusion
 
