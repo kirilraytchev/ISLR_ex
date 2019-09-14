@@ -207,7 +207,141 @@ where $g^{(m)}$ represents the m$th$ derivative of g.
 
 # *Ex.6* {#ex6}
 
-....
+In this exercise, you will further analyze the `Wage` data set considered
+throughout this chapter.
+
+*(a)* Perform polynomial regression to predict `wage` using `age`. Use cross-validation to select the optimal degree d for the polynomial.
+
+What degree was chosen, and how does this compare to the results of hypothesis testing using ANOVA? 
+
+Make a plot of the resulting polynomial fit to the data.
+
+>**Answer:** As a first step we use cv to select the optimal degree. After that, as step 2, we use ANOVA for the same taks and, in a 3rd step, we compare the results. As a final step we plot the fit.
+
+* Step 1) CV
+
+```{r}
+library(boot)
+
+max_degree <- 5
+
+get_poly_cv_errors <- function(n, ndata){
+        glm.fit <- glm(wage ~ poly(age, n), data = ndata)
+        cv.error <- cv.glm(ndata, glm.fit)$delta[1]
+        tbl <- tibble(
+                Degree = n,
+                Error =  cv.error,
+                Type = as_factor("cv")
+        )
+        tbl
+}
+
+map_df(1:max_degree, get_poly_cv_errors, ndata = Wage)
+```
+
+* Step 2) ANOVA
+
+```{r}
+fit.1 = lm(wage ~ age, data=Wage)
+fit.2 = lm(wage ~ poly(age, 2), data=Wage)
+fit.3 = lm(wage ~ poly(age, 3), data=Wage)
+fit.4 = lm(wage ~ poly(age, 4), data=Wage)
+fit.5 = lm(wage ~ poly(age, 5), data=Wage)
+anova(fit.1, fit.2, fit.3, fit.4, fit.5)
+```
+
+* Step 3) Comparison
+
+Degree 4 polynomila exhibits the lowest CV error and is significant according to ANOVA
+
+* Step 4) Plotting the Fit
+
+```{r}
+Wage_augm <- augment(fit.4, data = Wage)
+
+ggplot(Wage_augm) +
+        geom_point(aes(x = age, y = wage)) +
+        geom_line(aes(x = age, y = .fitted), color = "red", size = 2)
+```
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```
+
+*(b)* Fit a step function to predict `wage` using `age`, and perform crossvalidation
+to choose the optimal number of cuts. Make a plot of
+the fit obtained.
+
+```{r}
+library(boot)
+
+max_cut <- 10
+
+get_step_cv_errors <- function(n, ndata, var){
+        ndata$cut_var <- cut(var, n)
+        glm.fit <- glm(wage ~ cut_var, data = ndata)
+        cv.error <- cv.glm(ndata, glm.fit)$delta[1]
+        tbl <- tibble(
+                Cuts = n,
+                Error =  cv.error,
+                Type = as_factor("cv")
+        )
+        tbl
+}
+
+map_df(2:max_cut, get_step_cv_errors, ndata = Wage, var = Wage$age)
+
+```
+
+We observer min cv error at `max_cut = 8`
+
+Following is the plot of the selected fit: 
+
+```{r}
+Wage$cut_var <- cut(Wage$age, 8)
+
+glm.fit <- glm(wage ~ cut_var, data = Wage)
+
+Wage_augm <- augment(glm.fit, data = Wage)
+
+ggplot(Wage_augm) +
+        geom_point(aes(x = age, y = wage)) +
+        geom_line(aes(x = age, y = .fitted), color = "red", size = 2)
+
+```
+
+```{r}
+#clean up and load again kr funcs
+#
+rm(list = ls())
+source("kRfunlib.R")
+```
+
+# *Ex.7* {#ex7}
+
+The `Wage` data set contains a number of other features not explored
+in this chapter, such as marital status (`maritl`), job class (`jobclass`),
+and others. Explore the relationships between some of these other
+predictors and `wage`, and use non-linear fitting techniques in order to
+fit flexible models to the data. 
+
+Create plots of the results obtained, and write a summary of your findings.
+
+>**Answer:** First we explore the relationships ....
+
+```{r}
+library(corrr)
+
+# Wage %>% 
+#         correlate() %>%
+#         focus(wage)
+
+
+```
+
 
 
 

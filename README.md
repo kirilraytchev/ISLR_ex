@@ -120,7 +120,8 @@ no exercises to solve
 
 ### [Applied](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#applied)
 
-[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex6) .... in progress
+[Ex.6](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex6) |
+[Ex.7](https://kirilraytchev.github.io/ISLR_ex/Ch7.html#ex7) .... in progress
 
 # Conclusion
 
